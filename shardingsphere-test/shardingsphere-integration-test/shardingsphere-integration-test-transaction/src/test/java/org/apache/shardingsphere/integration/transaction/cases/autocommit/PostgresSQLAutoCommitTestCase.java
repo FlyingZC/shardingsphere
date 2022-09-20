@@ -22,6 +22,7 @@ import org.apache.shardingsphere.integration.transaction.cases.base.BaseTransact
 import org.apache.shardingsphere.integration.transaction.engine.base.BaseTransactionITCase;
 import org.apache.shardingsphere.integration.transaction.engine.base.TransactionTestCase;
 import org.apache.shardingsphere.integration.transaction.engine.constants.TransactionTestConstants;
+import org.junit.Assert;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -49,7 +50,7 @@ public final class PostgresSQLAutoCommitTestCase extends BaseTransactionTestCase
     private void assertAutoCommit() throws SQLException {
         Connection conn1 = getDataSource().getConnection();
         Connection conn2 = getDataSource().getConnection();
-        executeWithLog(conn1, "begin;");
+        executeWithLog(conn1, "\\set AUTOCOMMIT OFF;");
         executeWithLog(conn2, "begin;");
         executeWithLog(conn1, "insert into account(id, balance, transaction_id) values(1, 100, 1)");
         ResultSet emptyResultSet = executeQueryWithLog(conn2, "select * from account;");
@@ -63,5 +64,8 @@ public final class PostgresSQLAutoCommitTestCase extends BaseTransactionTestCase
             fail("There should be result.");
         }
         executeWithLog(conn2, "commit;");
+        Assert.assertFalse(conn1.getAutoCommit());
+        conn1.setAutoCommit(true);
+        Assert.assertTrue(conn1.getAutoCommit());
     }
 }

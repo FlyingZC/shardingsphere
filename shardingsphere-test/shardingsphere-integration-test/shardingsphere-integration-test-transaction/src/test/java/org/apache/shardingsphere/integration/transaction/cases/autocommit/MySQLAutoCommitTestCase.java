@@ -22,6 +22,7 @@ import org.apache.shardingsphere.integration.transaction.cases.base.BaseTransact
 import org.apache.shardingsphere.integration.transaction.engine.base.BaseTransactionITCase;
 import org.apache.shardingsphere.integration.transaction.engine.base.TransactionTestCase;
 import org.apache.shardingsphere.integration.transaction.engine.constants.TransactionTestConstants;
+import org.junit.Assert;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -64,5 +65,8 @@ public final class MySQLAutoCommitTestCase extends BaseTransactionTestCase {
         if (!notEmptyResultSet.next()) {
             fail("There should be result.");
         }
+        Assert.assertFalse(conn1.getAutoCommit());
+        conn1.setAutoCommit(true);
+        Assert.assertTrue(conn1.getAutoCommit());
     }
 }
