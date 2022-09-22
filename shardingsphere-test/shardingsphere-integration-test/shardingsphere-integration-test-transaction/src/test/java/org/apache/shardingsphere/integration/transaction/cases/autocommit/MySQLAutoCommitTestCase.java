@@ -45,6 +45,7 @@ public final class MySQLAutoCommitTestCase extends BaseTransactionTestCase {
     @Override
     public void executeTest() throws SQLException {
         assertAutoCommit();
+        assertAutoCommit2();
     }
     
     private void assertAutoCommit() throws SQLException {
@@ -54,7 +55,30 @@ public final class MySQLAutoCommitTestCase extends BaseTransactionTestCase {
         executeWithLog(conn2, "set session transaction isolation level read committed;");
         executeWithLog(conn1, "set autocommit=0;");
         executeWithLog(conn2, "begin;");
-        executeWithLog(conn1, "insert into account(id, balance, transaction_id) values(1, 100, 1)");
+        executeWithLog(conn1, "insert into account(id, balance, transaction_id) values(1, 100, 1);");
+        ResultSet emptyResultSet = executeQueryWithLog(conn2, "select * from account;");
+        if (emptyResultSet.next()) {
+            fail("There should not be result.");
+        }
+        executeWithLog(conn1, "commit;");
+        ThreadUtil.sleep(1, TimeUnit.SECONDS);
+        ResultSet notEmptyResultSet = executeQueryWithLog(conn2, "select * from account");
+        if (!notEmptyResultSet.next()) {
+            fail("There should be result.");
+        }
+    }
+    
+    private void assertAutoCommit2() throws SQLException {
+        Connection conn = getDataSource().getConnection();
+        executeWithLog(conn, "delete from account;");
+        Connection conn1 = getDataSource().getConnection();
+        Connection conn2 = getDataSource().getConnection();
+        executeWithLog(conn1, "set session transaction isolation level read committed;");
+        executeWithLog(conn2, "set session transaction isolation level read committed;");
+        conn1.setAutoCommit(false);
+        Assert.assertFalse(conn1.getAutoCommit());
+        executeWithLog(conn2, "begin;");
+        executeWithLog(conn1, "insert into account(id, balance, transaction_id) values(1, 100, 1);");
         ResultSet emptyResultSet = executeQueryWithLog(conn2, "select * from account;");
         if (emptyResultSet.next()) {
             fail("There should not be result.");
