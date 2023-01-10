@@ -18,6 +18,7 @@
 package org.apache.shardingsphere.transaction.xa;
 
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.shardingsphere.infra.database.type.DatabaseType;
 import org.apache.shardingsphere.infra.util.exception.ShardingSpherePreconditions;
 import org.apache.shardingsphere.infra.util.spi.ShardingSphereServiceLoader;
@@ -41,8 +42,10 @@ import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -52,6 +55,7 @@ import java.util.stream.Collectors;
 /**
  * ShardingSphere Transaction manager for XA.
  */
+@Slf4j
 public final class XAShardingSphereTransactionManager implements ShardingSphereTransactionManager {
     
     private static final Collection<String> XA_PROVIDERS;
@@ -67,9 +71,12 @@ public final class XAShardingSphereTransactionManager implements ShardingSphereT
     
     @Override
     public void init(final Map<String, DatabaseType> databaseTypes, final Map<String, DataSource> dataSources, final String providerType) {
-        if (!XA_PROVIDERS.contains(providerType)) {
+        log.warn("XAShardingSphereTransactionManager.init, before: providerType: {},XA_PROVIDERS: {}", providerType, XA_PROVIDERS);
+        if (!new HashSet<>(Arrays.asList("Atomikos", "Bitronix", "Narayana")).contains(providerType)) {
+            log.warn("XAShardingSphereTransactionManager.init, return: providerType: {},XA_PROVIDERS: {}", providerType, XA_PROVIDERS);
             return;
         }
+        log.warn("XAShardingSphereTransactionManager.init, after: providerType: {},XA_PROVIDERS: {}", providerType, XA_PROVIDERS);
         xaTransactionManagerProvider = null == providerType
                 ? RequiredSPIRegistry.getRegisteredService(XATransactionManagerProvider.class)
                 : TypedSPIRegistry.getRegisteredService(XATransactionManagerProvider.class, providerType, new Properties());
