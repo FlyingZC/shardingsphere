@@ -28,6 +28,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import static org.junit.Assert.assertNull;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
@@ -49,8 +50,8 @@ public final class TransactionTypeHolderTestCase extends BaseTransactionTestCase
             connection.setAutoCommit(false);
             connection.rollback();
         } finally {
-            TransactionTypeHolder.set(TransactionType.XA);
-            assertThat(TransactionTypeHolder.get(), is(TransactionType.XA));
+            TransactionTypeHolder.clear();
+            assertNull(TransactionTypeHolder.get());
         }
     }
 }
