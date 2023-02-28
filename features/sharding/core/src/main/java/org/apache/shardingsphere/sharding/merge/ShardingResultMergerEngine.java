@@ -61,4 +61,8 @@ public final class ShardingResultMergerEngine implements ResultMergerEngine<Shar
     public Class<ShardingRule> getTypeClass() {
         return ShardingRule.class;
     }
+    
+    private void test() {
+        
+    }
 }
