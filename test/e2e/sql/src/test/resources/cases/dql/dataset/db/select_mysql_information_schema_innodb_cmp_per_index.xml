@@ -6,7 +6,7 @@
   ~ (the "License"); you may not use this file except in compliance with
   ~ the License.  You may obtain a copy of the License at
   ~
-  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~      http://www.apache.org/licenses/LICENSE-2.0
   ~
   ~ Unless required by applicable law or agreed to in writing, software
   ~ distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +17,13 @@
 
 <dataset>
     <metadata>
-        <column name="version" assertion="false"/>
+        <column name="database_name"/>
+        <column name="table_name"/>
+        <column name="index_name"/>
+        <column name="compress_ops"/>
+        <column name="compress_ops_ok"/>
+        <column name="compress_time"/>
+        <column name="uncompress_ops"/>
+        <column name="uncompress_time"/>
     </metadata>
-    <row values=""/>
 </dataset>
