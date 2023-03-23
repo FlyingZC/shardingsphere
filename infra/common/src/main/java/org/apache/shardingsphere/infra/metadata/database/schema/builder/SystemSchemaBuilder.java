@@ -29,6 +29,7 @@ import org.apache.shardingsphere.infra.yaml.schema.pojo.YamlShardingSphereTable;
 import org.apache.shardingsphere.infra.yaml.schema.swapper.YamlTableSwapper;
 import org.yaml.snakeyaml.Yaml;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
@@ -80,6 +81,12 @@ public final class SystemSchemaBuilder {
             log.info("[加载资源begin]");
             YamlShardingSphereTable metaData = new Yaml().loadAs(each, YamlShardingSphereTable.class);
             tables.put(metaData.getName(), swapper.swapToObject(metaData));
+            try {
+                each.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+                log.info("[资源关闭]");
+            }
             log.info("[加载资源end]");
         }
         return new ShardingSphereSchema(tables, Collections.emptyMap());
