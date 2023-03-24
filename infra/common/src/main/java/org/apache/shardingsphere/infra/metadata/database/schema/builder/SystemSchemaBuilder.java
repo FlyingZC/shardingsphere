@@ -36,6 +36,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * System schema builder.
@@ -68,9 +69,13 @@ public final class SystemSchemaBuilder {
     private static Collection<InputStream> getSchemaStreams(final String schemaName, final DatabaseType databaseType) {
         SystemSchemaBuilderRule builderRule = SystemSchemaBuilderRule.valueOf(databaseType.getType(), schemaName);
         Collection<InputStream> result = new LinkedList<>();
+        AtomicInteger count = new AtomicInteger();
+        count.incrementAndGet();
         for (String each : builderRule.getTables()) {
-            log.info("[加载资源路径]schema/" + databaseType.getType().toLowerCase() + "/" + schemaName + "/" + each + ".yaml");
-            result.add(SystemSchemaBuilder.class.getClassLoader().getResourceAsStream("schema/" + databaseType.getType().toLowerCase() + "/" + schemaName + "/" + each + ".yaml"));
+            log.error("[加载资源路径]schema/" + count + ",路径: " + databaseType.getType().toLowerCase() + "/" + schemaName + "/" + each + ".yaml");
+            InputStream stream = SystemSchemaBuilder.class.getClassLoader().getResourceAsStream("schema/" + databaseType.getType().toLowerCase() + "/" + schemaName + "/" + each + ".yaml");
+            log.error("[加载资源stream]: " + count + "流: " + stream);
+            result.add(stream);
         }
         return result;
     }
