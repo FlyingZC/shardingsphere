@@ -70,8 +70,8 @@ public final class SystemSchemaBuilder {
         SystemSchemaBuilderRule builderRule = SystemSchemaBuilderRule.valueOf(databaseType.getType(), schemaName);
         Collection<InputStream> result = new LinkedList<>();
         AtomicInteger count = new AtomicInteger();
-        count.incrementAndGet();
         for (String each : builderRule.getTables()) {
+            count.incrementAndGet();
             log.error("[加载资源路径]schema/" + count + ",路径: " + databaseType.getType().toLowerCase() + "/" + schemaName + "/" + each + ".yaml");
             InputStream stream = SystemSchemaBuilder.class.getClassLoader().getResourceAsStream("schema/" + databaseType.getType().toLowerCase() + "/" + schemaName + "/" + each + ".yaml");
             log.error("[加载资源stream]: " + count + "流: " + stream);
