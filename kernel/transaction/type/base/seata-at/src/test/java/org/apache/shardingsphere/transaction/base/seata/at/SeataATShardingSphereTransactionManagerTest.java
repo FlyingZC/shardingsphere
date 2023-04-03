@@ -182,7 +182,7 @@ class SeataATShardingSphereTransactionManagerTest {
         } else if (requestQueue.poll() instanceof GlobalRollbackRequest) {
             assertThat(responseQueue.poll(), instanceOf(GlobalRollbackResponse.class));
         } else {
-            fail("Request package type error");
+            fail("Request package type error test");
         }
     }
     
