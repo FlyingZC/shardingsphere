@@ -22,20 +22,21 @@ import org.apache.shardingsphere.infra.database.type.dialect.MySQLDatabaseType;
 import org.apache.shardingsphere.infra.database.type.dialect.OpenGaussDatabaseType;
 import org.apache.shardingsphere.infra.database.type.dialect.PostgreSQLDatabaseType;
 import org.apache.shardingsphere.infra.metadata.database.schema.model.ShardingSphereSchema;
+import org.apache.shardingsphere.test.util.PropertiesBuilder;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
-import java.util.Properties;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SystemSchemaBuilderTest {
+
+    private ConfigurationProperties configProps = new ConfigurationProperties(PropertiesBuilder.build(new PropertiesBuilder.Property("system-schema-metadata-enabled", "true")));
     
     @Test
     void assertBuildForMySQL() {
-        ConfigurationProperties configProps = new ConfigurationProperties(new Properties());
         Map<String, ShardingSphereSchema> actualInformationSchema = SystemSchemaBuilder.build("information_schema", new MySQLDatabaseType(), configProps);
         assertThat(actualInformationSchema.size(), is(1));
         assertTrue(actualInformationSchema.containsKey("information_schema"));
@@ -56,7 +57,7 @@ class SystemSchemaBuilderTest {
     
     @Test
     void assertBuildForPostgreSQL() {
-        Map<String, ShardingSphereSchema> actual = SystemSchemaBuilder.build("sharding_db", new PostgreSQLDatabaseType(), new ConfigurationProperties(new Properties()));
+        Map<String, ShardingSphereSchema> actual = SystemSchemaBuilder.build("sharding_db", new PostgreSQLDatabaseType(), configProps);
         assertThat(actual.size(), is(3));
         assertTrue(actual.containsKey("information_schema"));
         assertTrue(actual.containsKey("pg_catalog"));
@@ -68,7 +69,7 @@ class SystemSchemaBuilderTest {
     
     @Test
     void assertBuildForOpenGaussSQL() {
-        Map<String, ShardingSphereSchema> actual = SystemSchemaBuilder.build("sharding_db", new OpenGaussDatabaseType(), new ConfigurationProperties(new Properties()));
+        Map<String, ShardingSphereSchema> actual = SystemSchemaBuilder.build("sharding_db", new OpenGaussDatabaseType(), configProps);
         assertThat(actual.size(), is(16));
         assertTrue(actual.containsKey("pg_catalog"));
         assertTrue(actual.containsKey("shardingsphere"));
