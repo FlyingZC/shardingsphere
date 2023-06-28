@@ -40,7 +40,7 @@ public enum TemporaryConfigurationPropertyKey implements TypedPropertyKey {
     /**
      * System schema metadata enabled.
      */
-    SYSTEM_SCHEMA_METADATA_ENABLED("system-schema-metadata-enabled", String.valueOf(Boolean.TRUE), boolean.class, true);
+    SYSTEM_SCHEMA_METADATA_ENABLED("system-schema-metadata-enabled", String.valueOf(Boolean.FALSE), boolean.class, true);
     
     private final String key;
     
