@@ -72,6 +72,9 @@ public final class BroadcastTableTransactionTestCase extends BaseTransactionTest
             assertTableRowCount(connection, T_ADDRESS, 1);
             connection.commit();
         }
+        try (Connection connection = getDataSource().getConnection()) {
+            assertTableRowCount(connection, T_ADDRESS, 1);
+        }
     }
     
     private void rollback() throws SQLException {
@@ -82,6 +85,9 @@ public final class BroadcastTableTransactionTestCase extends BaseTransactionTest
             executeWithLog(connection, "INSERT INTO t_address (id, code, address) VALUES (1, '1', 'nanjing');");
             assertTableRowCount(connection, T_ADDRESS, 1);
             connection.rollback();
+        }
+        try (Connection connection = getDataSource().getConnection()) {
+            assertTableRowCount(connection, T_ADDRESS, 0);
         }
     }
 }
