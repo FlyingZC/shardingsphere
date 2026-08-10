@@ -57,6 +57,8 @@ public final class MultiTableCommitAndRollbackTestCase extends BaseTransactionTe
             assertTableRowCount(connection, T_ORDER, 2);
             assertTableRowCount(connection, T_ORDER_ITEM, 2);
             connection.rollback();
+        }
+        try (Connection connection = getDataSource().getConnection()) {
             assertTableRowCount(connection, T_ORDER, 0);
             assertTableRowCount(connection, T_ORDER_ITEM, 0);
         }
@@ -75,6 +77,8 @@ public final class MultiTableCommitAndRollbackTestCase extends BaseTransactionTe
             assertTableRowCount(connection, T_ORDER, 2);
             assertTableRowCount(connection, T_ORDER_ITEM, 2);
             connection.commit();
+        }
+        try (Connection connection = getDataSource().getConnection()) {
             assertTableRowCount(connection, T_ORDER, 2);
             assertTableRowCount(connection, T_ORDER_ITEM, 2);
         }
