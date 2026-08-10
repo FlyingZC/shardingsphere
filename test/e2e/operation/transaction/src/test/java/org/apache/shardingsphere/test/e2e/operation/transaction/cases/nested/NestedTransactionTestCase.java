@@ -59,10 +59,8 @@ public final class NestedTransactionTestCase extends BaseTransactionTestCase {
             executeWithLog(connection, "INSERT INTO account (id, balance, transaction_id) VALUES (7, 7, 7), (8, 8, 8)");
             assertTrue(shardingSphereConnection.getDatabaseConnectionManager().getConnectionTransaction().isHoldTransaction(shardingSphereConnection.getAutoCommit()));
             connection.commit();
-            assertAccountBalances(connection, 1, 2, 3, 4, 7, 8);
-            connection.setAutoCommit(true);
-            executeWithLog(connection, "DELETE FROM ACCOUNT");
         }
+        assertAccountBalancesAndClear(1, 2, 3, 4, 7, 8);
     }
     
     private void assertOuterRollbackAndInnerRollback() throws SQLException {
@@ -76,10 +74,8 @@ public final class NestedTransactionTestCase extends BaseTransactionTestCase {
             executeWithLog(connection, "INSERT INTO account (id, balance, transaction_id) VALUES (7, 7, 7), (8, 8, 8)");
             assertTrue(shardingSphereConnection.getDatabaseConnectionManager().getConnectionTransaction().isHoldTransaction(shardingSphereConnection.getAutoCommit()));
             connection.rollback();
-            assertAccountBalances(connection, 3, 4);
-            connection.setAutoCommit(true);
-            executeWithLog(connection, "DELETE FROM ACCOUNT");
         }
+        assertAccountBalancesAndClear(3, 4);
     }
     
     private void assertOuterCommitAndInnerCommit() throws SQLException {
@@ -93,10 +89,8 @@ public final class NestedTransactionTestCase extends BaseTransactionTestCase {
             executeWithLog(connection, "INSERT INTO account (id, balance, transaction_id) VALUES (7, 7, 7), (8, 8, 8)");
             assertTrue(shardingSphereConnection.getDatabaseConnectionManager().getConnectionTransaction().isHoldTransaction(shardingSphereConnection.getAutoCommit()));
             connection.commit();
-            assertAccountBalances(connection, 1, 2, 3, 4, 5, 6, 7, 8);
-            connection.setAutoCommit(true);
-            executeWithLog(connection, "DELETE FROM ACCOUNT");
         }
+        assertAccountBalancesAndClear(1, 2, 3, 4, 5, 6, 7, 8);
     }
     
     private void assertOuterRollbackAndInnerCommit() throws SQLException {
@@ -110,9 +104,14 @@ public final class NestedTransactionTestCase extends BaseTransactionTestCase {
             executeWithLog(connection, "INSERT INTO account (id, balance, transaction_id) VALUES (7, 7, 7), (8, 8, 8)");
             assertTrue(shardingSphereConnection.getDatabaseConnectionManager().getConnectionTransaction().isHoldTransaction(shardingSphereConnection.getAutoCommit()));
             connection.rollback();
-            assertAccountBalances(connection, 3, 4, 5, 6);
-            connection.setAutoCommit(true);
-            executeWithLog(connection, "DELETE FROM ACCOUNT");
+        }
+        assertAccountBalancesAndClear(3, 4, 5, 6);
+    }
+    
+    private void assertAccountBalancesAndClear(final int... expectedBalances) throws SQLException {
+        try (Connection connection = getDataSource().getConnection()) {
+            assertAccountBalances(connection, expectedBalances);
+            executeWithLog(connection, "DELETE FROM account");
         }
     }
     
