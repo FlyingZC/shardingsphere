@@ -38,7 +38,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -107,7 +107,8 @@ public final class TransactionDeadlockTestCase extends BaseTransactionTestCase {
             Thread.currentThread().interrupt();
             return fail("Interrupted while waiting for a transfer result.", ex);
         } catch (final ExecutionException ex) {
-            SQLException actualException = assertInstanceOf(SQLException.class, ex.getCause());
+            assertTrue(ex.getCause() instanceof SQLException);
+            SQLException actualException = (SQLException) ex.getCause();
             assertThat(actualException.getMessage(), anyOf(
                     is("Lock wait timeout exceeded; try restarting transaction"), is("Deadlock found when trying to get lock; try restarting transaction")));
             return false;
@@ -125,16 +126,24 @@ public final class TransactionDeadlockTestCase extends BaseTransactionTestCase {
                 await();
                 connection.commit();
             } catch (final SQLException ex) {
-                try {
-                    await();
-                } catch (final SQLException coordinationException) {
-                    ex.addSuppressed(coordinationException);
-                }
-                connection.rollback();
+                rollback(connection, ex);
                 throw ex;
             }
         }
         return null;
+    }
+    
+    private void rollback(final Connection connection, final SQLException cause) {
+        try {
+            await();
+        } catch (final SQLException ex) {
+            cause.addSuppressed(ex);
+        }
+        try {
+            connection.rollback();
+        } catch (final SQLException ex) {
+            cause.addSuppressed(ex);
+        }
     }
     
     private void await() throws SQLException {
