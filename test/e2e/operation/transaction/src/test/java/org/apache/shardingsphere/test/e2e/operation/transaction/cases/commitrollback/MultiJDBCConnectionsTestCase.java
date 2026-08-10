@@ -40,17 +40,20 @@ public final class MultiJDBCConnectionsTestCase extends BaseTransactionTestCase 
     @Override
     public void executeTest(final TransactionContainerComposer containerComposer) throws SQLException {
         try (Connection connection = getDataSource().getConnection()) {
-            PreparedStatement statement = connection.prepareStatement("INSERT INTO account(id, balance, transaction_id) VALUES(?, ?, ?)");
             connection.setAutoCommit(false);
-            statement.setLong(1, 1L);
-            statement.setFloat(2, 1F);
-            statement.setInt(3, 1);
-            statement.execute();
-            try (Connection connection2 = getDataSource().getConnection()) {
-                connection2.createStatement().executeQuery("SELECT * FROM account");
+            try (PreparedStatement statement = connection.prepareStatement("INSERT INTO account(id, balance, transaction_id) VALUES(?, ?, ?)")) {
+                statement.setLong(1, 1L);
+                statement.setFloat(2, 1F);
+                statement.setInt(3, 1);
+                statement.execute();
+            }
+            try (Connection queryConnection = getDataSource().getConnection()) {
+                assertAccountRowCount(queryConnection, 0);
             }
             connection.commit();
-            assertAccountRowCount(connection, 1);
+        }
+        try (Connection queryConnection = getDataSource().getConnection()) {
+            assertAccountRowCount(queryConnection, 1);
         }
     }
 }
