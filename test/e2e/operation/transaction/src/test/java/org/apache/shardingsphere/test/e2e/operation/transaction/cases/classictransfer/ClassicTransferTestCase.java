@@ -17,22 +17,19 @@
 
 package org.apache.shardingsphere.test.e2e.operation.transaction.cases.classictransfer;
 
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.apache.shardingsphere.test.e2e.operation.transaction.cases.base.BaseTransactionTestCase;
 import org.apache.shardingsphere.test.e2e.operation.transaction.engine.base.TransactionContainerComposer;
 import org.apache.shardingsphere.test.e2e.operation.transaction.engine.base.TransactionTestCase;
-import org.awaitility.Awaitility;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collection;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -50,27 +47,37 @@ public final class ClassicTransferTestCase extends BaseTransactionTestCase {
     @Override
     public void executeTest(final TransactionContainerComposer containerComposer) throws SQLException {
         try (Connection connection = getDataSource().getConnection()) {
-            executeUpdateWithLog(connection, "INSERT INTO account(transaction_id, balance) VALUES (1,0), (2,100);");
+            executeUpdateWithLog(connection, "INSERT INTO account(id, transaction_id, balance) VALUES (1, 1, 0), (2, 2, 100);");
         }
         innerRun();
     }
     
-    @SneakyThrows(InterruptedException.class)
     private void innerRun() throws SQLException {
-        List<Thread> tasks = new LinkedList<>();
+        Collection<Thread> tasks = new LinkedList<>();
+        AtomicReference<SQLException> failure = new AtomicReference<>();
         for (int i = 0; i < 20; i++) {
-            Thread updateThread = new Thread(new UpdateAccountTask(getDataSource()));
+            Thread updateThread = new Thread(new UpdateAccountTask(getDataSource(), failure));
             updateThread.start();
             tasks.add(updateThread);
-            int sum = getBalanceSum();
-            assertThat(String.format("Balance sum is %s, should be 100.", sum), sum, is(100));
         }
-        Awaitility.await().pollDelay(3L, TimeUnit.SECONDS).until(() -> true);
+        for (Thread task : tasks) {
+            try {
+                task.join();
+            } catch (final InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                throw new SQLException("Interrupted while waiting for transfer tasks.", ex);
+            }
+        }
+        SQLException actualException = failure.get();
+        if (null != actualException) {
+            throw actualException;
+        }
+        assertBalanceSum();
+    }
+    
+    private void assertBalanceSum() throws SQLException {
         int sum = getBalanceSum();
         assertThat(String.format("Balance sum is %s, should be 100.", sum), sum, is(100));
-        for (Thread task : tasks) {
-            task.join();
-        }
     }
     
     private int getBalanceSum() throws SQLException {
@@ -79,9 +86,10 @@ public final class ClassicTransferTestCase extends BaseTransactionTestCase {
                 Connection connection = getDataSource().getConnection();
                 Statement statement = connection.createStatement()) {
             connection.setAutoCommit(false);
-            ResultSet resultSet = statement.executeQuery("SELECT SUM(balance) AS a FROM account WHERE transaction_id IN (1, 2)");
-            if (resultSet.next()) {
-                result = resultSet.getInt(1);
+            try (ResultSet resultSet = statement.executeQuery("SELECT SUM(balance) AS a FROM account WHERE transaction_id IN (1, 2)")) {
+                if (resultSet.next()) {
+                    result = resultSet.getInt(1);
+                }
             }
             connection.commit();
         }
@@ -89,21 +97,25 @@ public final class ClassicTransferTestCase extends BaseTransactionTestCase {
     }
     
     @RequiredArgsConstructor
-    @Getter
     private static final class UpdateAccountTask implements Runnable {
         
         private final DataSource dataSource;
         
+        private final AtomicReference<SQLException> failure;
+        
         public void run() {
             try (Connection connection = dataSource.getConnection()) {
                 connection.setAutoCommit(false);
-                Statement statement1 = connection.createStatement();
-                statement1.execute("UPDATE account SET balance = balance - 1 WHERE transaction_id = 2;");
-                Statement statement2 = connection.createStatement();
-                Awaitility.await().pollDelay(1L, TimeUnit.SECONDS).until(() -> true);
-                statement2.execute("UPDATE account SET balance = balance + 1 WHERE transaction_id = 1;");
-                connection.commit();
-            } catch (final SQLException ignored) {
+                try (Statement statement = connection.createStatement()) {
+                    statement.execute("UPDATE account SET balance = balance - 1 WHERE transaction_id = 2;");
+                    statement.execute("UPDATE account SET balance = balance + 1 WHERE transaction_id = 1;");
+                    connection.commit();
+                } catch (final SQLException ex) {
+                    connection.rollback();
+                    throw ex;
+                }
+            } catch (final SQLException ex) {
+                failure.compareAndSet(null, ex);
             }
         }
     }
