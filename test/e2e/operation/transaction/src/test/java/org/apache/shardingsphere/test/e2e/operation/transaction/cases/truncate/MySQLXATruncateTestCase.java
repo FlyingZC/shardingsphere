@@ -17,7 +17,6 @@
 
 package org.apache.shardingsphere.test.e2e.operation.transaction.cases.truncate;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.shardingsphere.database.exception.core.exception.transaction.TableModifyInTransactionException;
 import org.apache.shardingsphere.test.e2e.operation.transaction.cases.base.BaseTransactionTestCase;
 import org.apache.shardingsphere.test.e2e.operation.transaction.engine.base.TransactionContainerComposer;
@@ -28,13 +27,14 @@ import org.apache.shardingsphere.transaction.api.TransactionType;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * MySQL truncate XA transaction integration test.
  */
 @TransactionTestCase(dbTypes = TransactionTestConstants.MYSQL, transactionTypes = TransactionType.XA)
-@Slf4j
 public final class MySQLXATruncateTestCase extends BaseTransactionTestCase {
     
     public MySQLXATruncateTestCase(final TransactionTestCaseParameter testCaseParam) {
@@ -67,9 +67,10 @@ public final class MySQLXATruncateTestCase extends BaseTransactionTestCase {
                 connection.createStatement().execute("TRUNCATE account");
                 fail("Expect exception, but no exception report.");
             } catch (final TableModifyInTransactionException ex) {
-                log.info("Exception for expected in Proxy: {}", ex.getMessage());
+                assertThat(ex.getTableName(), is("account"));
             } catch (final SQLException ex) {
-                log.info("Exception for expected in JDBC: {}", ex.getMessage());
+                assertThat(ex.getSQLState(), is("XAE07"));
+                assertThat(ex.getErrorCode(), is(1399));
             } finally {
                 connection.rollback();
             }
