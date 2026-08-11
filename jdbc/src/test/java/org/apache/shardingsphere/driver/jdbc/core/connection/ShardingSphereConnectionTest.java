@@ -34,6 +34,8 @@ import org.mockito.internal.configuration.plugins.Plugins;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.SQLFeatureNotSupportedException;
+import java.sql.Savepoint;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Optional;
@@ -42,6 +44,7 @@ import java.util.Properties;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
@@ -128,6 +131,22 @@ class ShardingSphereConnectionTest {
             verify(databaseConnectionManager).begin();
             connection.rollback();
             verify(databaseConnectionManager).rollback();
+        }
+    }
+    
+    @Test
+    void assertRollbackToSavepointWithoutTransaction() throws SQLException {
+        try (ShardingSphereConnection connection = new ShardingSphereConnection("foo_db", mockContextManager())) {
+            SQLFeatureNotSupportedException actualException = assertThrows(SQLFeatureNotSupportedException.class, () -> connection.rollback(mock(Savepoint.class)));
+            assertThat(actualException.getMessage(), is("ROLLBACK TO SAVEPOINT can only be used in transaction blocks"));
+        }
+    }
+    
+    @Test
+    void assertReleaseSavepointWithoutTransaction() throws SQLException {
+        try (ShardingSphereConnection connection = new ShardingSphereConnection("foo_db", mockContextManager())) {
+            SQLFeatureNotSupportedException actualException = assertThrows(SQLFeatureNotSupportedException.class, () -> connection.releaseSavepoint(mock(Savepoint.class)));
+            assertThat(actualException.getMessage(), is("RELEASE SAVEPOINT can only be used in transaction blocks"));
         }
     }
     

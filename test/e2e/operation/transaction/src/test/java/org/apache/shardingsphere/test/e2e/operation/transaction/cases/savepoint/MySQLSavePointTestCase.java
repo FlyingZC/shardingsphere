@@ -22,6 +22,7 @@ import org.apache.shardingsphere.test.e2e.operation.transaction.engine.base.Tran
 import org.apache.shardingsphere.test.e2e.operation.transaction.engine.constants.TransactionTestConstants;
 
 import java.sql.Connection;
+import java.sql.Savepoint;
 import java.sql.SQLException;
 
 import static org.hamcrest.Matchers.is;
@@ -43,6 +44,7 @@ public final class MySQLSavePointTestCase extends BaseSavePointTestCase {
         assertRollbackToSavepoint();
         assertReleaseSavepoint();
         assertReleaseSavepointFailure();
+        assertSavepointInAutoCommit();
     }
     
     private void assertReleaseSavepointFailure() throws SQLException {
@@ -55,6 +57,14 @@ public final class MySQLSavePointTestCase extends BaseSavePointTestCase {
             SQLException actualException = assertThrows(SQLException.class, () -> executeWithLog(connection, "ROLLBACK TO SAVEPOINT point1"));
             assertThat(actualException.getMessage(), is("SAVEPOINT point1 does not exist"));
             connection.rollback();
+        }
+    }
+    
+    private void assertSavepointInAutoCommit() throws SQLException {
+        try (Connection connection = getDataSource().getConnection()) {
+            Savepoint savepoint = connection.setSavepoint("point");
+            assertThrows(SQLException.class, () -> connection.rollback(savepoint));
+            assertThrows(SQLException.class, () -> connection.releaseSavepoint(savepoint));
         }
     }
 }

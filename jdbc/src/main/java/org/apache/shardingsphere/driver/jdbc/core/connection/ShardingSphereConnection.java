@@ -202,7 +202,7 @@ public final class ShardingSphereConnection extends AbstractConnectionAdapter {
     @Override
     public void rollback(final Savepoint savepoint) throws SQLException {
         checkClose();
-        ShardingSpherePreconditions.checkState(databaseConnectionManager.getConnectionTransaction().isHoldTransaction(autoCommit) || !isSchemaSupportedDatabaseType(),
+        ShardingSpherePreconditions.checkState(databaseConnectionManager.getConnectionTransaction().isHoldTransaction(autoCommit),
                 () -> new SQLFeatureNotSupportedException("ROLLBACK TO SAVEPOINT can only be used in transaction blocks"));
         databaseConnectionManager.rollback(savepoint);
     }
@@ -226,11 +226,9 @@ public final class ShardingSphereConnection extends AbstractConnectionAdapter {
     @Override
     public void releaseSavepoint(final Savepoint savepoint) throws SQLException {
         checkClose();
-        ShardingSpherePreconditions.checkState(databaseConnectionManager.getConnectionTransaction().isHoldTransaction(autoCommit) || !isSchemaSupportedDatabaseType(),
+        ShardingSpherePreconditions.checkState(databaseConnectionManager.getConnectionTransaction().isHoldTransaction(autoCommit),
                 () -> new SQLFeatureNotSupportedException("RELEASE SAVEPOINT can only be used in transaction blocks"));
-        if (databaseConnectionManager.getConnectionTransaction().isHoldTransaction(autoCommit)) {
-            databaseConnectionManager.releaseSavepoint(savepoint);
-        }
+        databaseConnectionManager.releaseSavepoint(savepoint);
     }
     
     private void checkClose() throws SQLException {
