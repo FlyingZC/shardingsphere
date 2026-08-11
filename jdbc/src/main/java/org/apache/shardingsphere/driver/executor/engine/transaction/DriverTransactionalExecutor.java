@@ -78,12 +78,12 @@ public final class DriverTransactionalExecutor {
         try {
             connection.getDatabaseConnectionManager().begin();
             T result = callback.execute();
-            connection.commit();
+            connection.getDatabaseConnectionManager().commit();
             return result;
             // CHECKSTYLE:OFF
         } catch (final Exception ex) {
             // CHECKSTYLE:ON
-            connection.rollback();
+            connection.getDatabaseConnectionManager().rollback();
             throw SQLExceptionTransformEngine.toSQLException(ex, database.getProtocolType());
         }
     }
