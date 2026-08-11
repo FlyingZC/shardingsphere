@@ -50,9 +50,9 @@ TM can collect the results of all branch transactions and make atomic commit at 
 
 ![Two-phase commit model](https://shardingsphere.apache.org/document/current/img/transaction/overview.png)
 
-XA transaction is implemented based on the interface of ShardingSphere's proxy database xa start/end/prepare/commit/rollback/recover.
-
-For a logical SQL, ShardingSphere starts transactions in each proxied database with the xa begin directive, integrates TM internally for coordinating branch transactions, and performs xa commit /rollback.
+ShardingSphere implements XA transactions through a pluggable JTA transaction manager provider and wraps each storage unit as an XA data source.
+When a logical SQL statement is executed, the `XAResource` for each physical connection is enlisted in the current JTA transaction,
+and the transaction manager coordinates the prepare, commit, or rollback operations of all transaction branches.
 Distributed transactions based on XA protocol are more suitable for short transactions with fixed execution time because the required resources need to be locked during execution.
 For long transactions, data exclusivity during the entire transaction will have an impact on performance in concurrent scenarios.
 

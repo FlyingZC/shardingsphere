@@ -50,9 +50,8 @@ XA 事务采用的是 X/OPEN 组织所定义的 [DTP 模型](http://pubs.opengro
 
 ![两阶段提交模型](https://shardingsphere.apache.org/document/current/img/transaction/overview.png)
 
-XA 事务建立在 ShardingSphere 代理的数据库 xa start/end/prepare/commit/rollback/recover 的接口上。
-
-对于一条逻辑 SQL，ShardingSphere 通过 `xa begin` 指令在每个被代理的数据库开启事务，内部集成 TM，用于协调各分支事务，并执行 `xa commit/rollback`。
+ShardingSphere 通过可插拔的 JTA 事务管理器 provider 实现 XA 事务，并将各存储单元包装为 XA 数据源。
+执行逻辑 SQL 时，物理连接对应的 `XAResource` 会加入当前 JTA 事务，由事务管理器协调各分支事务的准备、提交或回滚。
 
 基于 XA 协议实现的分布式事务，由于在执行的过程中需要对所需资源进行锁定，它更加适用于执行时间确定的短事务。
 对于长事务来说，整个事务进行期间对数据的独占，将会对并发场景下的性能产生一定的影响。
