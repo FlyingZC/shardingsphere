@@ -56,6 +56,7 @@ public class TransactionRollbackOnlyTestCase extends BaseTransactionTestCase {
             String duplicatedKeySQL = "INSERT INTO account (id, balance, transaction_id) values (1, 11, 11)";
             assertThrows(SQLException.class, () -> executeUpdateWithLog(connection, duplicatedKeySQL));
             assertExceptionOccur(connection, true);
+            assertThrows(SQLException.class, () -> executeUpdateWithLog(connection, "INSERT INTO account (id, balance, transaction_id) values (2, 2, 2)"));
             connection.commit();
         }
         try (Connection connection = getDataSource().getConnection()) {
@@ -71,6 +72,8 @@ public class TransactionRollbackOnlyTestCase extends BaseTransactionTestCase {
             executeUpdateWithLog(connection, "UPDATE account SET balance = 100 WHERE id = 1");
             try (PreparedStatement duplicatedKeyInsertStatement = connection.prepareStatement("INSERT INTO account (id, balance, transaction_id) values (?, 11, 11)")) {
                 duplicatedKeyInsertStatement.setInt(1, 1);
+                assertThrows(SQLException.class, duplicatedKeyInsertStatement::execute);
+                duplicatedKeyInsertStatement.setInt(1, 2);
                 assertThrows(SQLException.class, duplicatedKeyInsertStatement::execute);
             }
             assertExceptionOccur(connection, true);
