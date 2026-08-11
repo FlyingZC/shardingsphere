@@ -21,7 +21,8 @@ The Apache ShardingSphere community chose instead to give the users the ability 
 
 * Recover committing and rolling back in other machines after the service is down.
 * MySQL, in the transaction block, the SQL execution is abnormal, and run `Commit`, and data remains consistent.
-* After XA transactions are configured, the maximum length of the storage unit name cannot exceed 45 characters.
+* After XA transactions are configured, the byte length of the XA unique resource name, which consists of an internal resource ID prefix and the storage unit name, must not exceed 45.
+  The internal prefix consumes part of this limit, and non-ASCII characters may use multiple bytes, so the available storage unit name is shorter than 45 characters.
 * PostgreSQL and openGauss have the same metadata-changing DDL restriction described for LOCAL transactions.
 
 ## BASE Transaction
