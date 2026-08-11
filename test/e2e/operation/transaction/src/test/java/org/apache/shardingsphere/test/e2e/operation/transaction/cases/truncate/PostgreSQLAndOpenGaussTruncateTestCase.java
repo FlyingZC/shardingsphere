@@ -51,6 +51,9 @@ public final class PostgreSQLAndOpenGaussTruncateTestCase extends BaseTransactio
             connection.rollback();
             // Expected truncate operation can be rolled back in PostgreSQL & OpenGauss
             assertAccountRowCount(connection, 8);
+            try (Connection queryConnection = getDataSource().getConnection()) {
+                assertAccountRowCount(queryConnection, 8);
+            }
         }
     }
     
@@ -62,7 +65,9 @@ public final class PostgreSQLAndOpenGaussTruncateTestCase extends BaseTransactio
             executeWithLog(connection, "TRUNCATE account;");
             assertAccountRowCount(connection, 0);
             connection.commit();
-            assertAccountRowCount(connection, 0);
+            try (Connection queryConnection = getDataSource().getConnection()) {
+                assertAccountRowCount(queryConnection, 0);
+            }
         }
     }
     
