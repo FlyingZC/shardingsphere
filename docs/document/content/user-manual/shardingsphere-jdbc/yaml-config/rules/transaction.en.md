@@ -19,7 +19,7 @@ transaction:
 
 ### Use LOCAL Mode
 
-The content of the global.yaml configuration file is as follows:
+Configure the JDBC YAML file as follows:
 
 ```yaml
 transaction:
@@ -28,13 +28,14 @@ transaction:
 
 ### Use XA Mode
 
-The content of the global.yaml configuration file is as follows:
+Configure the JDBC YAML file as follows. The following example uses Narayana; set `providerType` to `Atomikos` when using Atomikos.
 
 ```yaml
 transaction:
   defaultType: XA
-  providerType: Narayana/Atomikos 
+  providerType: Narayana
 ```
+
 To manually add Narayana-related dependencies:
 
 ```
@@ -51,12 +52,12 @@ shardingsphere-transaction-xa-narayana-x.x.x-SNAPSHOT.jar
 
 ### Use BASE Mode
 
-The content of the global.yaml configuration file is as follows:
+Configure the JDBC YAML file as follows:
 
 ```yaml
 transaction:
   defaultType: BASE
-  providerType: Seata 
+  providerType: Seata
 ```
 
 Build a Seata Server, add relevant configuration files and Seata dependencies, see [ShardingSphere Integrates Seata Flexible Transactions](https://community.sphere-ex.com/t/topic/404)
