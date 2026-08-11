@@ -51,7 +51,9 @@ public final class MySQLLocalTruncateTestCase extends BaseTransactionTestCase {
             assertAccountRowCount(connection, 0);
             connection.rollback();
             // Expected truncate operation cannot be rolled back in MySQL local transaction
-            assertAccountRowCount(connection, 0);
+            try (Connection queryConnection = getDataSource().getConnection()) {
+                assertAccountRowCount(queryConnection, 0);
+            }
         }
     }
     
@@ -63,7 +65,9 @@ public final class MySQLLocalTruncateTestCase extends BaseTransactionTestCase {
             executeWithLog(connection, "TRUNCATE account");
             assertAccountRowCount(connection, 0);
             connection.commit();
-            assertAccountRowCount(connection, 0);
+            try (Connection queryConnection = getDataSource().getConnection()) {
+                assertAccountRowCount(queryConnection, 0);
+            }
         }
     }
     
