@@ -81,6 +81,12 @@ The following table can be used for comparison to help developers choose the sui
 | Concurrent performance  | no loss                                      | severe loss                               | slight loss                         |
 | Applied scenarios       | Inconsistent processing by the business side | short transaction & low-level concurrency | long transaction & high concurrency |
 
+### Implicit Distributed Transactions
+
+When a connection is in auto-commit mode, the default transaction type is XA or BASE, no distributed transaction is active, and a write DML statement is routed to multiple execution units,
+ShardingSphere-JDBC and ShardingSphere-Proxy automatically start a distributed transaction for that statement. The transaction is committed when the statement succeeds and rolled back when it fails.
+This mechanism does not apply to queries or write DML statements routed to only one execution unit.
+
 ## Application Scenarios
 
 The database's transactions can meet ACID business requirements in a standalone application scenario. However, in distributed scenarios, traditional database solutions cannot manage and control global transactions, and users may find data inconsistency on multiple database nodes.
