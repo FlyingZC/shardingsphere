@@ -425,7 +425,7 @@ a `javax.sql.DataSource` instance should be created manually or obtained from a 
 
 ### Transactional propagation across service calls
 
-Transactional propagationn in cross-service call scenarios is not as out-of-the-box as transaction operations within a single microservice.
+Transactional propagation in cross-service call scenarios is not as out-of-the-box as transaction operations within a single microservice.
 For Seata Server, transactional propagation in cross-service call scenarios requires passing XID to the service provider through service calls and binding it to `org.apache.seata.core.context.RootContext`.
 Refer to https://seata.apache.org/docs/user/api/ . This requires discussing two situations,
 
@@ -434,8 +434,9 @@ transaction scenarios across multiple microservices need to consider using `org.
 and passing it to the end microservice through HTTP or RPC, and processing it in the Filter or Spring WebMVC HandlerInterceptor of the end microservice.
 Spring WebMVC HandlerInterceptor is only applicable to Spring Boot microservices and is invalid for Quarkus, Micronaut Framework and Helidon.
 
-2. In the scenario of using ShardingSphere Proxy, multiple microservices operate local transactions against the logical data source of ShardingSphere Proxy.
-This will be converted into distributed transaction operations on the server side of ShardingSphere Proxy, without considering additional Seata XID.
+2. When using ShardingSphere Proxy, the local transaction of each client connection can be converted into a distributed transaction on the ShardingSphere Proxy server.
+   However, Proxy connections established by different microservices do not automatically share the same Seata XID or form one global transaction.
+   The current Proxy integration cannot propagate a transaction to another ShardingSphere Proxy instance or microservice.
 
 Introduce a simple scenario to continue discussing the transactional propagation across service calls in the scenario of using ShardingSphere JDBC.
 

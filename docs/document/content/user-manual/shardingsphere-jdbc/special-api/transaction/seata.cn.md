@@ -418,8 +418,9 @@ seata:
    通过 HTTP 或 RPC 等手段传递给终点微服务，并在终点微服务的 Filter 或 Spring WebMVC HandlerInterceptor 中处理。
    Spring WebMVC HandlerInterceptor 仅适用于 Spring Boot 微服务，对 Quarkus，Micronaut Framework 和 Helidon 无效。
 
-2. 在使用 ShardingSphere Proxy 的场景下，多个微服务均对着 ShardingSphere Proxy 的逻辑数据源操作本地事务，
-   这将在 ShardingSphere Proxy 的服务端来转化为对分布式事务的操作，不需要考虑额外的 Seata XID。
+2. 在使用 ShardingSphere Proxy 的场景下，每个客户端连接的本地事务可以在 ShardingSphere Proxy 服务端转换为分布式事务。
+   但是，多个微服务分别建立的 Proxy 连接不会自动共享同一个 Seata XID，也不会自动组成同一个全局事务。
+   当前 Proxy 集成不支持将事务传播到其他 ShardingSphere Proxy 实例或微服务。
 
 引入简单场景来继续讨论在使用 ShardingSphere JDBC 的场景下，跨服务调用的事务传播。假设存在以下已知微服务和中间件的 Docker Image 实例。
 
