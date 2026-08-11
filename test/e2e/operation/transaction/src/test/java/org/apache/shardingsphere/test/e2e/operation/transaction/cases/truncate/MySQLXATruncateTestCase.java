@@ -69,8 +69,7 @@ public final class MySQLXATruncateTestCase extends BaseTransactionTestCase {
             } catch (final TableModifyInTransactionException ex) {
                 assertThat(ex.getTableName(), is("account"));
             } catch (final SQLException ex) {
-                assertThat(ex.getSQLState(), is("XAE07"));
-                assertThat(ex.getErrorCode(), is(1399));
+                assertThat(ex.getMessage(), is("XAER_RMFAIL: The command cannot be executed when global transaction is in the  ACTIVE state"));
             } finally {
                 connection.rollback();
             }
