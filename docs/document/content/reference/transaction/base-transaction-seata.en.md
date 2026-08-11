@@ -12,7 +12,7 @@ After Seata `DataSource` encapsulation, it is easy to put Seata AT transaction i
 
 ## Init Seata Engine
 
-When an application containing `ShardingSphereTransactionBaseSeataAT` startup, the user-configured DataSource will be wrapped into seata `DataSourceProxy` through `seata.conf`, then registered into RM.
+When an application using Seata AT transactions starts, the user-configured DataSource is wrapped in a Seata `DataSourceProxy` according to `seata.conf` and registered with the RM.
 
 ## Transaction Begin
 
