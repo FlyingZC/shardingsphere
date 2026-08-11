@@ -9,7 +9,7 @@ With ShardingSphere-JDBC, XA and BASE mode transactions can be used through the 
 
 ## Prerequisites
 
-Introducing Maven dependency
+Introduce the ShardingSphere-JDBC Maven dependency:
 
 ```xml
 <dependency>
@@ -17,26 +17,48 @@ Introducing Maven dependency
     <artifactId>shardingsphere-jdbc</artifactId>
     <version>${shardingsphere.version}</version>
 </dependency>
+```
 
-<!-- This module is required when using XA transactions -->
-<dependency>
-    <groupId>org.apache.shardingsphere</groupId>
-    <artifactId>shardingsphere-transaction-xa-core</artifactId>
-    <version>${shardingsphere.version}</version>
-</dependency>
+When using XA transactions, `shardingsphere-jdbc` transitively introduces the XA core module. Select one XA provider according to `providerType`.
 
-<!-- This module is required when using the Narayana mode with XA transactions -->
+For Narayana:
+
+```xml
 <dependency>
     <groupId>org.apache.shardingsphere</groupId>
     <artifactId>shardingsphere-transaction-xa-narayana</artifactId>
-    <version>${project.version}</version>
+    <version>${shardingsphere.version}</version>
 </dependency>
+```
 
-<!-- This module is required when using BASE transactions -->
+For Atomikos:
+
+```xml
+<dependency>
+    <groupId>org.apache.shardingsphere</groupId>
+    <artifactId>shardingsphere-transaction-xa-atomikos</artifactId>
+    <version>${shardingsphere.version}</version>
+</dependency>
+```
+
+When using BASE transactions, introduce both the ShardingSphere Seata AT integration module and Seata Client:
+
+```xml
 <dependency>
     <groupId>org.apache.shardingsphere</groupId>
     <artifactId>shardingsphere-transaction-base-seata-at</artifactId>
     <version>${shardingsphere.version}</version>
+</dependency>
+<dependency>
+    <groupId>org.apache.seata</groupId>
+    <artifactId>seata-all</artifactId>
+    <version>2.6.0</version>
+    <exclusions>
+        <exclusion>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4-runtime</artifactId>
+        </exclusion>
+    </exclusions>
 </dependency>
 ```
 
