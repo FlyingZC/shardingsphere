@@ -17,7 +17,6 @@
 
 package org.apache.shardingsphere.test.e2e.operation.transaction.cases.readonly;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.shardingsphere.test.e2e.operation.transaction.engine.base.TransactionContainerComposer;
 import org.apache.shardingsphere.test.e2e.operation.transaction.engine.base.TransactionTestCase;
 import org.apache.shardingsphere.test.e2e.operation.transaction.engine.constants.TransactionTestConstants;
@@ -25,11 +24,14 @@ import org.apache.shardingsphere.test.e2e.operation.transaction.engine.constants
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 /**
  * PostgreSQL set read only transaction integration test.
  */
 @TransactionTestCase(dbTypes = TransactionTestConstants.POSTGRESQL)
-@Slf4j
 public final class PostgreSQLSetReadOnlyTestCase extends SetReadOnlyTestCase {
     
     public PostgreSQLSetReadOnlyTestCase(final TransactionTestCaseParameter testCaseParam) {
@@ -39,6 +41,7 @@ public final class PostgreSQLSetReadOnlyTestCase extends SetReadOnlyTestCase {
     @Override
     public void executeTest(final TransactionContainerComposer containerComposer) throws SQLException {
         assertSetReadOnly();
+        assertSetReadOnlyInTransaction();
         assertNotSetReadOnly();
     }
     
@@ -49,8 +52,24 @@ public final class PostgreSQLSetReadOnlyTestCase extends SetReadOnlyTestCase {
         try (Connection connection2 = getDataSource().getConnection()) {
             connection2.setReadOnly(true);
             assertQueryBalance(connection2);
+            executeWithLog(connection2, "UPDATE account SET balance = 101 WHERE id = 2;");
+            try (Connection queryConnection = getDataSource().getConnection()) {
+                assertAccountBalances(queryConnection, 0, 101);
+            }
             executeWithLog(connection2, "UPDATE account SET balance = 100 WHERE id = 2;");
-            log.info("Using the driver of postgresql:42.4.3 expect to update successfully.");
+        }
+    }
+    
+    private void assertSetReadOnlyInTransaction() throws SQLException {
+        try (Connection connection = getDataSource().getConnection()) {
+            connection.setAutoCommit(false);
+            connection.setReadOnly(true);
+            SQLException actualException = assertThrows(SQLException.class, () -> executeWithLog(connection, "UPDATE account SET balance = 101 WHERE id = 2;"));
+            assertThat(actualException.getSQLState(), is("25006"));
+            connection.rollback();
+        }
+        try (Connection connection = getDataSource().getConnection()) {
+            assertAccountBalances(connection, 0, 100);
         }
     }
 }
