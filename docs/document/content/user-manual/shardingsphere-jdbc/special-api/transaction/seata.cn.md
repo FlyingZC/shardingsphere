@@ -329,7 +329,10 @@ public class ExampleTest {
 
 ## 使用限制
 
-ShardingSphere 的 Seata 集成不支持隔离级别。
+ShardingSphere 会将 `Connection#setTransactionIsolation` 设置传播到物理数据库连接。
+该设置只控制本地事务隔离级别，不能选择 Seata AT 的全局事务隔离级别。
+Seata AT 的全局隔离语义由本地事务、全局锁和查询方式共同决定。
+需要全局读已提交语义时，应遵循 [Seata 事务隔离说明](https://seata.apache.org/docs/user/appendix/isolation/) 使用锁定查询。
 
 ShardingSphere 的 Seata 集成将获取到的 Seata 全局事务置入线程的局部变量。
 而 `org.apache.seata.spring.annotation.GlobalTransactionScanner` 则是采用 Dynamic Proxy 的方式对方法进行增强。

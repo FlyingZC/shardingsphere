@@ -27,4 +27,5 @@ Apache ShardingSphere 希望能够将分布式事务的选择权交给使用者�
 
 ### 不支持项
 
-* 不支持隔离级别。
+* `Connection#setTransactionIsolation` 仅设置物理数据库连接的本地隔离级别，不能选择 Seata AT 的全局事务隔离级别。
+  Seata AT 的全局隔离语义由本地事务、全局锁和查询方式共同决定。

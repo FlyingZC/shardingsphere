@@ -340,7 +340,10 @@ public class ExampleTest {
 
 ## Usage restrictions
 
-ShardingSphere's Seata integration does not support isolation levels.
+ShardingSphere propagates `Connection#setTransactionIsolation` to physical database connections.
+This setting only controls local transaction isolation and does not select a global transaction isolation level for Seata AT.
+Seata AT global isolation semantics depend on local transactions, global locks, and the query method.
+To obtain global read committed semantics, follow the [Seata transaction isolation documentation](https://seata.apache.org/docs/user/appendix/isolation/) and use a locking query.
 
 ShardingSphere's Seata integration places the obtained Seata global transaction into the thread's local variables.
 And `org.apache.seata.spring.annotation.GlobalTransactionScanner` uses Dynamic Proxy to enhance the method.

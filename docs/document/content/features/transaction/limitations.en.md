@@ -28,4 +28,5 @@ The Apache ShardingSphere community chose instead to give the users the ability 
 
 ### Unsupported
 
-* Does not support isolation level.
+* `Connection#setTransactionIsolation` only sets the local isolation level of physical database connections; it does not select a global transaction isolation level for Seata AT.
+  Seata AT global isolation semantics depend on local transactions, global locks, and the query method.
