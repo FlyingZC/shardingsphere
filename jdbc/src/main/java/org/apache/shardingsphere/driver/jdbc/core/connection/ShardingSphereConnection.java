@@ -191,11 +191,13 @@ public final class ShardingSphereConnection extends AbstractConnectionAdapter {
     
     @Override
     public void commit() throws SQLException {
+        ShardingSpherePreconditions.checkState(!autoCommit, () -> new SQLException("Cannot commit when autoCommit is enabled."));
         databaseConnectionManager.commit();
     }
     
     @Override
     public void rollback() throws SQLException {
+        ShardingSpherePreconditions.checkState(!autoCommit, () -> new SQLException("Cannot rollback when autoCommit is enabled."));
         databaseConnectionManager.rollback();
     }
     

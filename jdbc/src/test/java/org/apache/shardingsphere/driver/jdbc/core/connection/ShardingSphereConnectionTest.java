@@ -108,6 +108,14 @@ class ShardingSphereConnectionTest {
     }
     
     @Test
+    void assertCommitInAutoCommit() throws SQLException {
+        try (ShardingSphereConnection connection = new ShardingSphereConnection("foo_db", mockContextManager())) {
+            SQLException actualException = assertThrows(SQLException.class, connection::commit);
+            assertThat(actualException.getMessage(), is("Cannot commit when autoCommit is enabled."));
+        }
+    }
+    
+    @Test
     void assertRollbackWithLocalTransaction() throws SQLException {
         Connection physicalConnection = mock(Connection.class);
         try (ShardingSphereConnection connection = new ShardingSphereConnection("foo_db", mockContextManager(physicalConnection))) {
@@ -131,6 +139,14 @@ class ShardingSphereConnectionTest {
             verify(databaseConnectionManager).begin();
             connection.rollback();
             verify(databaseConnectionManager).rollback();
+        }
+    }
+    
+    @Test
+    void assertRollbackInAutoCommit() throws SQLException {
+        try (ShardingSphereConnection connection = new ShardingSphereConnection("foo_db", mockContextManager())) {
+            SQLException actualException = assertThrows(SQLException.class, connection::rollback);
+            assertThat(actualException.getMessage(), is("Cannot rollback when autoCommit is enabled."));
         }
     }
     
