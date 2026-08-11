@@ -87,6 +87,15 @@ Apache ShardingSphere 集成了 SEATA 作为柔性事务的使用方案。
 ShardingSphere-JDBC 和 ShardingSphere-Proxy 会为该 SQL 自动开启分布式事务。SQL 执行成功时自动提交，执行失败时自动回滚。
 该机制不适用于查询语句或只路由到单个执行单元的写 DML。
 
+### Savepoint
+
+在连接保持事务中，ShardingSphere-JDBC 支持 `Connection#setSavepoint`、`Connection#rollback(Savepoint)` 和 `Connection#releaseSavepoint`，
+ShardingSphere-Proxy 支持 `SAVEPOINT`、`ROLLBACK TO SAVEPOINT` 和 `RELEASE SAVEPOINT` 语句。
+保存点操作会应用于事务中已经缓存的物理连接；设置保存点后，事务中新获取的物理连接也会重放该保存点。
+
+LOCAL 事务需要关闭自动提交，XA 事务需要已经开启分布式事务。BASE 事务不保持物理连接，因此不支持保存点。
+实际支持能力还取决于存储数据库及 XA provider 对保存点的支持。
+
 ## 应用场景
 
 在单机应用场景中，依赖数据库提供的事务即可满足业务上对事务 ACID 的需求。但是在分布式场景下，传统数据库解决方案缺乏对全局事务的管控能力，用户在使用过程中可能遇到多个数据库节点上出现数据不一致的问题。

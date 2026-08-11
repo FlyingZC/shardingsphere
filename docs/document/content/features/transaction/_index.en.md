@@ -87,6 +87,15 @@ When a connection is in auto-commit mode, the default transaction type is XA or 
 ShardingSphere-JDBC and ShardingSphere-Proxy automatically start a distributed transaction for that statement. The transaction is committed when the statement succeeds and rolled back when it fails.
 This mechanism does not apply to queries or write DML statements routed to only one execution unit.
 
+### Savepoint
+
+In a connection-held transaction, ShardingSphere-JDBC supports `Connection#setSavepoint`, `Connection#rollback(Savepoint)`, and `Connection#releaseSavepoint`,
+while ShardingSphere-Proxy supports the `SAVEPOINT`, `ROLLBACK TO SAVEPOINT`, and `RELEASE SAVEPOINT` statements.
+Savepoint operations are applied to physical connections already cached by the transaction. A savepoint is also replayed on physical connections acquired later in the transaction.
+
+A LOCAL transaction must have auto-commit disabled, and an XA distributed transaction must already be active. BASE transactions do not hold physical connections and therefore do not support savepoints.
+Actual support also depends on the storage database and XA provider's savepoint capabilities.
+
 ## Application Scenarios
 
 The database's transactions can meet ACID business requirements in a standalone application scenario. However, in distributed scenarios, traditional database solutions cannot manage and control global transactions, and users may find data inconsistency on multiple database nodes.

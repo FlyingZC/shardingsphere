@@ -15,7 +15,6 @@ weight = 6
 
 * 不支持存储过程，函数，游标的操作；
 * 不支持执行 native SQL；
-* 不支持 savepoint 相关操作；
 * 不支持 Schema/Catalog 的操作；
 * 不支持自定义类型映射。
 

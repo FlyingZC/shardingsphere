@@ -15,7 +15,6 @@ weight = 6
 
 * Do not support operations of stored procedure, function and cursor
 * Do not support native SQL
-* Do not support savepoint related operations
 * Do not support Schema/Catalog operation
 * Do not support self-defined type mapping
 
