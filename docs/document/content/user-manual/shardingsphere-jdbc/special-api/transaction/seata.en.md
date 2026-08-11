@@ -416,7 +416,7 @@ seata:
 
 For the case of setting up ShardingSphere's Seata integration,
 In business functions unrelated to ShardingSphere JDBC DataSource, if you need to use Seata Client's Seata TCC mode-related features in business functions,
-you can instantiate a non-proxy ordinary TCC interface implementation class, and then use `org.apache.integration.tx.api.util.ProxyUtil` to create a proxy TCC interface class,
+you can instantiate a non-proxy ordinary TCC interface implementation class, and then use `org.apache.seata.integration.tx.api.util.ProxyUtil` to create a proxy TCC interface class,
 and call the functions corresponding to the three stages of the TCC interface implementation class `Try`, `Confirm`, and `Cancel`.
 
 For the `org.apache.seata.spring.annotation.GlobalTransactional` annotation introduced by the Seata TCC mode or the business functions involved in the Seata TCC mode that need to interact with the database instance, 
