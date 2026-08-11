@@ -37,7 +37,9 @@ public final class MultiTransactionInConnectionTestCase extends BaseTransactionT
     
     @Override
     public void executeTest(final TransactionContainerComposer containerComposer) throws SQLException {
-        try (Connection connection = getDataSource().getConnection()) {
+        try (
+                Connection connection = getDataSource().getConnection();
+                Connection queryConnection = getDataSource().getConnection()) {
             PreparedStatement statement = connection.prepareStatement("INSERT INTO account(id, balance, transaction_id) VALUES(?, ?, ?)");
             for (int i = 0; i < 8; i++) {
                 connection.setAutoCommit(false);
@@ -46,8 +48,8 @@ public final class MultiTransactionInConnectionTestCase extends BaseTransactionT
                 statement.setInt(3, i);
                 statement.execute();
                 connection.commit();
+                assertAccountRowCount(queryConnection, i + 1);
             }
-            assertAccountRowCount(connection, 8);
         }
     }
 }
