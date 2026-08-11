@@ -65,9 +65,9 @@ BASE stands for basic availability, soft state, and eventual consistency.
 - Soft state: system status updates are allowed to have a certain delay, and the delay may not be recognized by customers.
 - Eventually consistent: guarantee the eventual consistency of the system by means of messaging.
 
-ACID transaction puts a high demand for isolation, where all resources must be locked during the execution of transactions.
-Flexible transaction is to move mutex operations from the resource level to the business level through business logic.
-Reduce the requirement for strong consistency in exchange for higher system throughput.
+ShardingSphere BASE transactions use Seata AT mode. A branch transaction releases its local database lock after committing the local transaction in phase one,
+but its global write lock is retained until the global transaction finishes. Therefore, BASE does not hold local database locks for the entire transaction as XA does,
+but writes to hot data can still contend for global locks. The throughput benefit from relaxed consistency requirements depends on the workload.
 
 ACID-based strong consistency transactions and BASE-based final consistency transactions are not a jack of all trades and can fully leverage their advantages in the most appropriate scenarios.
 Apache ShardingSphere integrates the operational scheme taking SEATA as the flexible transaction.
@@ -77,9 +77,9 @@ The following table can be used for comparison to help developers choose the sui
 |-------------------------|----------------------------------------------|-------------------------------------------|-------------------------------------|
 | Business transformation | None                                         | None                                      | Seata Server needed                 |
 | Consistency             | Not supported                                | Supported                                 | Final consistency                   |
-| Isolation               | Not supported                                | Supported                                 | Business side guaranteed            |
+| Isolation               | Not supported                                | Supported                                 | Seata AT global locks                |
 | Concurrent performance  | no loss                                      | severe loss                               | slight loss                         |
-| Applied scenarios       | Inconsistent processing by the business side | short transaction & low-level concurrency | long transaction & high concurrency |
+| Applied scenarios       | Inconsistent processing by the business side | short transaction & low-level concurrency | eventual consistency & low hot-spot contention |
 
 ### Implicit Distributed Transactions
 
@@ -99,7 +99,9 @@ Strong data consistency is guaranteed in a distributed environment in terms of X
 
 ### Application Scenarios for ShardingSphere BASE Transaction
 
-In terms of BASE transactions, final data consistency is guaranteed in a distributed environment. Unlike XA transactions, resources are not locked during the whole transaction process, so its performance is relatively higher.
+BASE transactions provide eventual consistency in a distributed environment.
+Local database locks are released after phase one, but global write locks are retained until the global transaction finishes.
+They are suitable when temporary data inconsistency is acceptable and contention on hot writes is controlled.
 
 ### Application Scenarios for ShardingSphere LOCAL Transaction
 
