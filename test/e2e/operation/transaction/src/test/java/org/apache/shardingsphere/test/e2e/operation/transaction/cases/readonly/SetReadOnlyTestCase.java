@@ -48,16 +48,6 @@ public abstract class SetReadOnlyTestCase extends BaseTransactionTestCase {
     }
     
     void assertQueryBalance(final Connection connection) throws SQLException {
-        ResultSet resultSet = executeQueryWithLog(connection, "SELECT * FROM account;");
-        while (resultSet.next()) {
-            int id = resultSet.getInt("id");
-            int balance = resultSet.getInt("balance");
-            if (1 == id) {
-                assertThat(String.format("Balance is %s, should be 0.", balance), balance, is(0));
-            }
-            if (2 == id) {
-                assertThat(String.format("Balance is %s, should be 100.", balance), balance, is(100));
-            }
-        }
+        assertAccountBalances(connection, 0, 100);
     }
 }
