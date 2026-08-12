@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
  */
 @TransactionTestCase(dbTypes = TransactionTestConstants.MYSQL, transactionTypes = TransactionType.LOCAL)
 public final class MySQLLocalTruncateTestCase extends BaseTransactionTestCase {
-
+    
     public MySQLLocalTruncateTestCase(final TransactionTestCaseParameter testCaseParam) {
         super(testCaseParam);
     }
@@ -80,7 +80,7 @@ public final class MySQLLocalTruncateTestCase extends BaseTransactionTestCase {
             executeWithLog(connection, "INSERT INTO account(id, balance, transaction_id) VALUES (1, 1, 1),(2, 2, 2),(3, 3, 3),(4, 4, 4),(5, 5, 5),(6, 6, 6),(7, 7, 7),(8, 8, 8)");
         }
     }
-
+    
     private void executeTruncate(final Connection connection) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             assertFalse(statement.execute("TRUNCATE account"));
