@@ -24,6 +24,7 @@ import org.apache.shardingsphere.test.e2e.operation.transaction.engine.constants
 import org.apache.shardingsphere.transaction.api.TransactionType;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 
@@ -44,6 +45,11 @@ public final class PostgreSQLAndOpenGaussTransactionRecoveryTestCase extends Bas
     
     @Override
     protected void executeTest(final TransactionContainerComposer containerComposer) throws SQLException {
+        assertRecoveryWithStatement();
+        assertRecoveryWithPreparedStatement();
+    }
+    
+    private void assertRecoveryWithStatement() throws SQLException {
         prepare();
         try (Connection connection = getDataSource().getConnection()) {
             connection.setAutoCommit(false);
@@ -62,6 +68,39 @@ public final class PostgreSQLAndOpenGaussTransactionRecoveryTestCase extends Bas
         try (Connection connection = getDataSource().getConnection()) {
             assertAccountBalances(connection, 1, 3);
         }
+    }
+    
+    private void assertRecoveryWithPreparedStatement() throws SQLException {
+        prepare();
+        try (
+                Connection connection = getDataSource().getConnection();
+                PreparedStatement updateStatement = connection.prepareStatement("UPDATE account SET balance = ? WHERE id = ?");
+                PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO account (id, balance, transaction_id) VALUES (?, ?, ?)")) {
+            connection.setAutoCommit(false);
+            updateStatement.setInt(1, 100);
+            updateStatement.setInt(2, 1);
+            assertThat(updateStatement.executeUpdate(), is(1));
+            setInsertParameters(insertStatement, 1, 11);
+            SQLException duplicatedKeyException = assertThrows(SQLException.class, insertStatement::executeUpdate);
+            assertThat(duplicatedKeyException.getSQLState(), is("23505"));
+            setInsertParameters(insertStatement, 2, 2);
+            SQLException abortedTransactionException = assertThrows(SQLException.class, insertStatement::executeUpdate);
+            assertThat(abortedTransactionException.getClass(), is(SQLFeatureNotSupportedException.class));
+            assertThat(abortedTransactionException.getMessage(), is("Current transaction is aborted, commands ignored until end of transaction block."));
+            connection.rollback();
+            setInsertParameters(insertStatement, 3, 3);
+            assertThat(insertStatement.executeUpdate(), is(1));
+            connection.commit();
+        }
+        try (Connection connection = getDataSource().getConnection()) {
+            assertAccountBalances(connection, 1, 3);
+        }
+    }
+    
+    private void setInsertParameters(final PreparedStatement statement, final int id, final int balance) throws SQLException {
+        statement.setInt(1, id);
+        statement.setInt(2, balance);
+        statement.setInt(3, id);
     }
     
     private void prepare() throws SQLException {
