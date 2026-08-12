@@ -102,11 +102,16 @@ public abstract class BaseTransactionTestCase {
         }
     }
     
-    protected void executeSqlListWithLog(final Connection connection, final String... sqlList) throws SQLException {
-        for (String each : sqlList) {
+    protected int[] executeSqlListWithLog(final Connection connection, final String... sqlList) throws SQLException {
+        int[] result = new int[sqlList.length];
+        for (int i = 0; i < sqlList.length; i++) {
+            String each = sqlList[i];
             log.info("Connection execute: {}.", each);
-            connection.createStatement().execute(each);
+            try (Statement statement = connection.createStatement()) {
+                result[i] = statement.executeUpdate(each);
+            }
         }
+        return result;
     }
     
     protected int countWithLog(final Connection connection, final String sql) throws SQLException {

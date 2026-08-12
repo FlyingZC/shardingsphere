@@ -24,6 +24,9 @@ import org.apache.shardingsphere.test.e2e.operation.transaction.engine.base.Tran
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+
 /**
  * Multi-table transaction commit and rollback integration test.
  */
@@ -49,11 +52,11 @@ public final class MultiTableCommitAndRollbackTestCase extends BaseTransactionTe
             connection.setAutoCommit(false);
             assertTableRowCount(connection, T_ORDER, 0);
             assertTableRowCount(connection, T_ORDER_ITEM, 0);
-            executeSqlListWithLog(connection,
+            assertThat(executeSqlListWithLog(connection,
                     "INSERT INTO t_order (order_id, user_id, status) VALUES (1, 1, '1');",
                     "INSERT INTO t_order (order_id, user_id, status) VALUES (2, 2, '2');",
                     "INSERT INTO t_order_item (item_id, order_id, user_id, status) VALUES (1, 1, 1, '1');",
-                    "INSERT INTO t_order_item (item_id, order_id, user_id, status) VALUES (2, 2, 2, '2');");
+                    "INSERT INTO t_order_item (item_id, order_id, user_id, status) VALUES (2, 2, 2, '2');"), is(new int[]{1, 1, 1, 1}));
             assertTableRowCount(connection, T_ORDER, 2);
             assertTableRowCount(connection, T_ORDER_ITEM, 2);
             connection.rollback();
@@ -69,11 +72,11 @@ public final class MultiTableCommitAndRollbackTestCase extends BaseTransactionTe
             connection.setAutoCommit(false);
             assertTableRowCount(connection, T_ORDER, 0);
             assertTableRowCount(connection, T_ORDER_ITEM, 0);
-            executeSqlListWithLog(connection,
+            assertThat(executeSqlListWithLog(connection,
                     "INSERT INTO t_order (order_id, user_id, status) VALUES (1, 1, '1');",
                     "INSERT INTO t_order (order_id, user_id, status) VALUES (2, 2, '2');",
                     "INSERT INTO t_order_item (item_id, order_id, user_id, status) VALUES (1, 1, 1, '1');",
-                    "INSERT INTO t_order_item (item_id, order_id, user_id, status) VALUES (2, 2, 2, '2');");
+                    "INSERT INTO t_order_item (item_id, order_id, user_id, status) VALUES (2, 2, 2, '2');"), is(new int[]{1, 1, 1, 1}));
             assertTableRowCount(connection, T_ORDER, 2);
             assertTableRowCount(connection, T_ORDER_ITEM, 2);
             connection.commit();
