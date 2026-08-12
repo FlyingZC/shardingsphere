@@ -25,6 +25,7 @@ import org.apache.shardingsphere.transaction.api.TransactionType;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -50,7 +51,10 @@ public final class PostgreSQLAndOpenGaussTransactionRecoveryTestCase extends Bas
             SQLException duplicatedKeyException = assertThrows(SQLException.class,
                     () -> executeUpdateWithLog(connection, "INSERT INTO account (id, balance, transaction_id) VALUES (1, 11, 11)"));
             assertThat(duplicatedKeyException.getSQLState(), is("23505"));
-            assertThrows(SQLException.class, () -> executeUpdateWithLog(connection, "INSERT INTO account (id, balance, transaction_id) VALUES (2, 2, 2)"));
+            SQLException abortedTransactionException = assertThrows(SQLException.class,
+                    () -> executeUpdateWithLog(connection, "INSERT INTO account (id, balance, transaction_id) VALUES (2, 2, 2)"));
+            assertThat(abortedTransactionException.getClass(), is(SQLFeatureNotSupportedException.class));
+            assertThat(abortedTransactionException.getMessage(), is("Current transaction is aborted, commands ignored until end of transaction block."));
             connection.rollback();
             executeUpdateWithLog(connection, "INSERT INTO account (id, balance, transaction_id) VALUES (3, 3, 3)");
             connection.commit();
