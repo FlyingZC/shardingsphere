@@ -24,6 +24,7 @@ import org.apache.shardingsphere.test.e2e.operation.transaction.engine.constants
 import java.sql.Connection;
 import java.sql.Savepoint;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -63,8 +64,12 @@ public final class MySQLSavePointTestCase extends BaseSavePointTestCase {
     private void assertSavepointInAutoCommit() throws SQLException {
         try (Connection connection = getDataSource().getConnection()) {
             Savepoint savepoint = connection.setSavepoint("point");
-            assertThrows(SQLException.class, () -> connection.rollback(savepoint));
-            assertThrows(SQLException.class, () -> connection.releaseSavepoint(savepoint));
+            SQLException rollbackException = assertThrows(SQLException.class, () -> connection.rollback(savepoint));
+            assertThat(rollbackException.getClass(), is(SQLFeatureNotSupportedException.class));
+            assertThat(rollbackException.getMessage(), is("ROLLBACK TO SAVEPOINT can only be used in transaction blocks"));
+            SQLException releaseException = assertThrows(SQLException.class, () -> connection.releaseSavepoint(savepoint));
+            assertThat(releaseException.getClass(), is(SQLFeatureNotSupportedException.class));
+            assertThat(releaseException.getMessage(), is("RELEASE SAVEPOINT can only be used in transaction blocks"));
         }
     }
 }
