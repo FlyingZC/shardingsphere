@@ -77,9 +77,11 @@ public abstract class BaseTransactionTestCase {
         connection.createStatement().execute(sql);
     }
     
-    protected static void executeUpdateWithLog(final Connection connection, final String sql) throws SQLException {
+    protected static int executeUpdateWithLog(final Connection connection, final String sql) throws SQLException {
         log.info("Connection execute update: {}.", sql);
-        connection.createStatement().executeUpdate(sql);
+        try (Statement statement = connection.createStatement()) {
+            return statement.executeUpdate(sql);
+        }
     }
     
     protected static ResultSet executeQueryWithLog(final Connection connection, final String sql) throws SQLException {
