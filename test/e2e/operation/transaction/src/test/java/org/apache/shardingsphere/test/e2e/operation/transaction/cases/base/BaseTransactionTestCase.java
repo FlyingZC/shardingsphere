@@ -34,6 +34,8 @@ import java.sql.Statement;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Base transaction test case.
@@ -95,10 +97,10 @@ public abstract class BaseTransactionTestCase {
     
     protected static void assertTableRowCount(final Connection connection, final String tableName, final int rowNum) throws SQLException {
         try (Statement statement = connection.createStatement(); ResultSet resultSet = statement.executeQuery(String.format("SELECT COUNT(*) FROM %s", tableName))) {
-            if (resultSet.next()) {
-                int rowCount = resultSet.getInt(1);
-                assertThat(String.format("Recode num assert error, expect: %s, actual: %s.", rowNum, rowCount), rowCount, is(rowNum));
-            }
+            assertTrue(resultSet.next());
+            int rowCount = resultSet.getInt(1);
+            assertThat(String.format("Recode num assert error, expect: %s, actual: %s.", rowNum, rowCount), rowCount, is(rowNum));
+            assertFalse(resultSet.next());
         }
     }
     
