@@ -25,6 +25,9 @@ import org.apache.shardingsphere.test.e2e.operation.transaction.engine.base.Tran
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+
 /**
  * Broadcast table transaction integration test.
  */
@@ -68,7 +71,7 @@ public final class BroadcastTableTransactionTestCase extends BaseTransactionTest
             connection.setAutoCommit(false);
             executeWithLog(connection, "DELETE FROM t_address;");
             assertTableRowCount(connection, T_ADDRESS, 0);
-            executeWithLog(connection, "INSERT INTO t_address (id, code, address) VALUES (1, '1', 'nanjing');");
+            assertThat(executeUpdateWithLog(connection, "INSERT INTO t_address (id, code, address) VALUES (1, '1', 'nanjing');"), is(1));
             assertTableRowCount(connection, T_ADDRESS, 1);
             connection.commit();
         }
@@ -82,7 +85,7 @@ public final class BroadcastTableTransactionTestCase extends BaseTransactionTest
             connection.setAutoCommit(false);
             executeWithLog(connection, "DELETE FROM t_address;");
             assertTableRowCount(connection, T_ADDRESS, 0);
-            executeWithLog(connection, "INSERT INTO t_address (id, code, address) VALUES (1, '1', 'nanjing');");
+            assertThat(executeUpdateWithLog(connection, "INSERT INTO t_address (id, code, address) VALUES (1, '1', 'nanjing');"), is(1));
             assertTableRowCount(connection, T_ADDRESS, 1);
             connection.rollback();
         }
