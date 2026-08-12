@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * Auto commit completion transaction integration test.
  */
-@TransactionTestCase(dbTypes = {TransactionTestConstants.MYSQL, TransactionTestConstants.POSTGRESQL}, adapters = TransactionTestConstants.JDBC,
+@TransactionTestCase(dbTypes = {TransactionTestConstants.MYSQL, TransactionTestConstants.POSTGRESQL, TransactionTestConstants.OPENGAUSS}, adapters = TransactionTestConstants.JDBC,
         transactionTypes = TransactionType.LOCAL)
 public final class AutoCommitCompletionTestCase extends BaseTransactionTestCase {
     
