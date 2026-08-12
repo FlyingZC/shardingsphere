@@ -32,7 +32,7 @@ import java.util.Objects;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * OpenGauss cursor transaction integration test.
@@ -202,23 +202,28 @@ public final class OpenGaussCursorTestCase extends BaseTransactionTestCase {
     }
     
     private void fetch(final Connection connection, final int expectedId, final String cursorName) throws SQLException {
-        ResultSet resultSet = executeQueryWithLog(connection, String.format("fetch %s;", cursorName));
-        if (resultSet.next()) {
+        try (ResultSet resultSet = executeQueryWithLog(connection, String.format("fetch %s;", cursorName))) {
+            assertTrue(resultSet.next());
             assertThat(resultSet.getInt("id"), is(expectedId));
-        } else {
-            fail("Expected has result.");
+            assertFalse(resultSet.next());
         }
     }
     
     private void fetchOver(final Connection connection, final String cursorName) throws SQLException {
-        assertFalse(executeQueryWithLog(connection, String.format("fetch %s;", cursorName)).next());
+        try (ResultSet resultSet = executeQueryWithLog(connection, String.format("fetch %s;", cursorName))) {
+            assertFalse(resultSet.next());
+        }
     }
     
     private void fetchForwardOver(final Connection connection, final String cursorName) throws SQLException {
-        assertFalse(executeQueryWithLog(connection, String.format("fetch forward from %s;", cursorName)).next());
+        try (ResultSet resultSet = executeQueryWithLog(connection, String.format("fetch forward from %s;", cursorName))) {
+            assertFalse(resultSet.next());
+        }
     }
     
     private void fetchForwardAllOver(final Connection connection, final String cursorName) throws SQLException {
-        assertFalse(executeQueryWithLog(connection, String.format("fetch forward all from %s;", cursorName)).next());
+        try (ResultSet resultSet = executeQueryWithLog(connection, String.format("fetch forward all from %s;", cursorName))) {
+            assertFalse(resultSet.next());
+        }
     }
 }
