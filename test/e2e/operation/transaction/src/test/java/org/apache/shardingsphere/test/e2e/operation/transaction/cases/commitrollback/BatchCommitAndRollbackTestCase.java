@@ -54,7 +54,7 @@ public final class BatchCommitAndRollbackTestCase extends BaseTransactionTestCas
                 PreparedStatement statement = connection.prepareStatement(INSERT_SQL)) {
             connection.setAutoCommit(false);
             addBatch(statement);
-            assertThat(statement.executeBatch().length, is(2));
+            assertThat(statement.executeBatch(), is(new int[]{1, 1}));
             assertAccountBalances(connection, 1, 2);
             connection.rollback();
         }
@@ -69,7 +69,7 @@ public final class BatchCommitAndRollbackTestCase extends BaseTransactionTestCas
                 PreparedStatement statement = connection.prepareStatement(INSERT_SQL)) {
             connection.setAutoCommit(false);
             addBatch(statement);
-            assertThat(statement.executeBatch().length, is(2));
+            assertThat(statement.executeBatch(), is(new int[]{1, 1}));
             assertAccountBalances(connection, 1, 2);
             connection.commit();
         }
