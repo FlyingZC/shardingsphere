@@ -26,6 +26,8 @@ import org.apache.shardingsphere.transaction.api.TransactionType;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -42,8 +44,10 @@ public final class AutoCommitCompletionTestCase extends BaseTransactionTestCase 
     @Override
     public void executeTest(final TransactionContainerComposer containerComposer) throws SQLException {
         try (Connection connection = getDataSource().getConnection()) {
-            assertThrows(SQLException.class, connection::commit);
-            assertThrows(SQLException.class, connection::rollback);
+            SQLException commitException = assertThrows(SQLException.class, connection::commit);
+            assertThat(commitException.getMessage(), is("Cannot commit when autoCommit is enabled."));
+            SQLException rollbackException = assertThrows(SQLException.class, connection::rollback);
+            assertThat(rollbackException.getMessage(), is("Cannot rollback when autoCommit is enabled."));
         }
     }
 }
