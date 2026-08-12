@@ -25,6 +25,7 @@ import java.sql.SQLException;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -40,10 +41,12 @@ public abstract class SetReadOnlyTestCase extends BaseTransactionTestCase {
         try (Connection connection = getDataSource().getConnection()) {
             assertQueryBalance(connection);
             executeUpdateWithLog(connection, "UPDATE account SET balance = 101 WHERE id = 2;");
-            ResultSet resultSet = executeQueryWithLog(connection, "SELECT * FROM account WHERE id = 2");
-            assertTrue(resultSet.next());
-            int balanceResult = resultSet.getInt("balance");
-            assertThat(String.format("Balance is %s, should be 101.", balanceResult), balanceResult, is(101));
+            try (ResultSet resultSet = executeQueryWithLog(connection, "SELECT * FROM account WHERE id = 2")) {
+                assertTrue(resultSet.next());
+                int balanceResult = resultSet.getInt("balance");
+                assertThat(String.format("Balance is %s, should be 101.", balanceResult), balanceResult, is(101));
+                assertFalse(resultSet.next());
+            }
         }
     }
     
