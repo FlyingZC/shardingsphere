@@ -27,9 +27,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 /**
  * PostgreSQL auto commit transaction integration test.
  */
@@ -57,11 +54,9 @@ public final class PostgreSQLAutoCommitTestCase extends AutoCommitTestCase {
             connection1.setAutoCommit(false);
             connection2.setAutoCommit(false);
             executeWithLog(connection1, "INSERT INTO account(id, balance, transaction_id) VALUES(1, 100, 1);");
-            assertFalse(executeQueryWithLog(connection2, "SELECT * FROM account;").next());
+            assertAccountBalances(connection2);
             connection1.commit();
-            Awaitility.await().atMost(1L, TimeUnit.SECONDS).pollDelay(200L, TimeUnit.MILLISECONDS).until(
-                    () -> executeQueryWithLog(connection2, "SELECT * FROM account;").next());
-            assertTrue(executeQueryWithLog(connection2, "SELECT * FROM account;").next());
+            Awaitility.await().atMost(1L, TimeUnit.SECONDS).pollDelay(200L, TimeUnit.MILLISECONDS).untilAsserted(() -> assertAccountBalances(connection2, 100));
         }
     }
 }
