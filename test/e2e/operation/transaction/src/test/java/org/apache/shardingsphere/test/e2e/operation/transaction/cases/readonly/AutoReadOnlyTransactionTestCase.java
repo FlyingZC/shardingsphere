@@ -45,7 +45,7 @@ public final class AutoReadOnlyTransactionTestCase extends BaseTransactionTestCa
             executeWithLog(connection, "INSERT INTO account VALUES (1, 1, 1)");
             assertAccountBalances(queryConnection, 1);
             connection.setAutoCommit(false);
-            executeWithLog(connection, "SELECT * FROM account");
+            assertAccountBalances(connection, 1);
             connection.setAutoCommit(false);
             executeWithLog(connection, "INSERT INTO account VALUES (2, 2, 2)");
             connection.setAutoCommit(true);
@@ -53,14 +53,14 @@ public final class AutoReadOnlyTransactionTestCase extends BaseTransactionTestCa
             executeWithLog(connection, "INSERT INTO account VALUES (3, 3, 3)");
             assertAccountBalances(queryConnection, 1, 2, 3);
             connection.setAutoCommit(false);
-            executeWithLog(connection, "SELECT * FROM account");
-            executeWithLog(connection, "SELECT * FROM account");
+            assertAccountBalances(connection, 1, 2, 3);
+            assertAccountBalances(connection, 1, 2, 3);
             connection.commit();
             assertAccountBalances(queryConnection, 1, 2, 3);
             connection.setAutoCommit(false);
-            executeWithLog(connection, "SELECT * FROM account");
+            assertAccountBalances(connection, 1, 2, 3);
             executeWithLog(connection, "INSERT INTO account VALUES (4, 4, 4)");
-            executeWithLog(connection, "SELECT * FROM account");
+            assertAccountBalances(connection, 1, 2, 3, 4);
             connection.commit();
             assertAccountBalances(queryConnection, 1, 2, 3, 4);
             queryConnection.close();
