@@ -19,8 +19,10 @@ package org.apache.shardingsphere.driver.executor.engine.batch.statement;
 
 import lombok.RequiredArgsConstructor;
 
+import java.sql.BatchUpdateException;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 
@@ -48,12 +50,18 @@ public final class BatchStatementExecutor {
      *
      * @return execute results
      * @throws SQLException SQL exception
+     * @throws BatchUpdateException one of SQL executions failed
      */
     public int[] executeBatch() throws SQLException {
         int[] result = new int[batchedSQLs.size()];
         int index = 0;
         for (String each : batchedSQLs) {
-            result[index++] = statement.executeUpdate(each);
+            try {
+                result[index] = statement.executeUpdate(each);
+                index++;
+            } catch (final SQLException ex) {
+                throw new BatchUpdateException(ex.getMessage(), ex.getSQLState(), ex.getErrorCode(), Arrays.copyOf(result, index), ex);
+            }
         }
         return result;
     }

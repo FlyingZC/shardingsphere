@@ -49,6 +49,11 @@ public final class MySQLBatchFailureRollbackTestCase extends BaseTransactionTest
     
     @Override
     protected void executeTest(final TransactionContainerComposer containerComposer) throws SQLException {
+        assertFailureRollbackWithPreparedStatement();
+        assertFailureRollbackWithStatement();
+    }
+    
+    private void assertFailureRollbackWithPreparedStatement() throws SQLException {
         try (
                 Connection connection = getDataSource().getConnection();
                 PreparedStatement statement = connection.prepareStatement(INSERT_SQL)) {
@@ -60,6 +65,23 @@ public final class MySQLBatchFailureRollbackTestCase extends BaseTransactionTest
             assertThat(actualException.getSQLState(), is("23000"));
             assertThat(actualException.getErrorCode(), is(1062));
             assertTrue(Arrays.stream(actualException.getUpdateCounts()).anyMatch(each -> Statement.EXECUTE_FAILED == each));
+            connection.rollback();
+        }
+        try (Connection connection = getDataSource().getConnection()) {
+            assertAccountBalances(connection);
+        }
+    }
+    
+    private void assertFailureRollbackWithStatement() throws SQLException {
+        try (Connection connection = getDataSource().getConnection(); Statement statement = connection.createStatement()) {
+            connection.setAutoCommit(false);
+            statement.addBatch("INSERT INTO account(id, balance, transaction_id) VALUES(1, 1, 1)");
+            statement.addBatch("INSERT INTO account(id, balance, transaction_id) VALUES(1, 11, 11)");
+            statement.addBatch("INSERT INTO account(id, balance, transaction_id) VALUES(2, 2, 2)");
+            BatchUpdateException actualException = assertThrows(BatchUpdateException.class, statement::executeBatch);
+            assertThat(actualException.getSQLState(), is("23000"));
+            assertThat(actualException.getErrorCode(), is(1062));
+            assertThat(actualException.getUpdateCounts(), is(new int[]{1}));
             connection.rollback();
         }
         try (Connection connection = getDataSource().getConnection()) {

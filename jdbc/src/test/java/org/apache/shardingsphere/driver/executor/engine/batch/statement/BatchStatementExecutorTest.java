@@ -19,14 +19,17 @@ package org.apache.shardingsphere.driver.executor.engine.batch.statement;
 
 import org.junit.jupiter.api.Test;
 
+import java.sql.BatchUpdateException;
 import java.sql.SQLException;
 import java.sql.Statement;
 
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 final class BatchStatementExecutorTest {
     
@@ -41,5 +44,21 @@ final class BatchStatementExecutorTest {
         assertThat(actual, is(new int[]{1, 2}));
         executor.clear();
         assertThat(executor.executeBatch(), is(new int[0]));
+    }
+    
+    @Test
+    void assertExecuteBatchFailure() throws SQLException {
+        Statement statement = mock(Statement.class);
+        SQLException cause = new SQLException("failure", "23000", 1062);
+        when(statement.executeUpdate(anyString())).thenReturn(1).thenThrow(cause);
+        BatchStatementExecutor executor = new BatchStatementExecutor(statement);
+        executor.addBatch("UPDATE t SET col=1 WHERE id=1");
+        executor.addBatch("UPDATE t SET col=10 WHERE id=2");
+        BatchUpdateException actual = assertThrows(BatchUpdateException.class, executor::executeBatch);
+        assertThat(actual.getMessage(), is("failure"));
+        assertThat(actual.getSQLState(), is("23000"));
+        assertThat(actual.getErrorCode(), is(1062));
+        assertThat(actual.getUpdateCounts(), is(new int[]{1}));
+        assertThat(actual.getCause(), sameInstance(cause));
     }
 }
