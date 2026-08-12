@@ -26,6 +26,7 @@ import org.opengauss.jdbc.PSQLSavepoint;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Savepoint;
+import java.sql.SQLFeatureNotSupportedException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -64,9 +65,15 @@ public final class OpenGaussSavePointTestCase extends BaseSavePointTestCase {
     @SneakyThrows(SQLException.class)
     private void assertSavepointNotInTransaction() {
         try (Connection connection = getDataSource().getConnection()) {
-            assertThrows(SQLException.class, () -> connection.setSavepoint("point"));
-            assertThrows(SQLException.class, () -> connection.rollback(new PSQLSavepoint("point1")));
-            assertThrows(SQLException.class, () -> connection.releaseSavepoint(new PSQLSavepoint("point1")));
+            SQLException setSavepointException = assertThrows(SQLException.class, () -> connection.setSavepoint("point"));
+            assertThat(setSavepointException.getClass(), is(SQLFeatureNotSupportedException.class));
+            assertThat(setSavepointException.getMessage(), is("Savepoint can only be used in transaction blocks"));
+            SQLException rollbackException = assertThrows(SQLException.class, () -> connection.rollback(new PSQLSavepoint("point1")));
+            assertThat(rollbackException.getClass(), is(SQLFeatureNotSupportedException.class));
+            assertThat(rollbackException.getMessage(), is("ROLLBACK TO SAVEPOINT can only be used in transaction blocks"));
+            SQLException releaseException = assertThrows(SQLException.class, () -> connection.releaseSavepoint(new PSQLSavepoint("point1")));
+            assertThat(releaseException.getClass(), is(SQLFeatureNotSupportedException.class));
+            assertThat(releaseException.getMessage(), is("RELEASE SAVEPOINT can only be used in transaction blocks"));
         }
     }
 }
