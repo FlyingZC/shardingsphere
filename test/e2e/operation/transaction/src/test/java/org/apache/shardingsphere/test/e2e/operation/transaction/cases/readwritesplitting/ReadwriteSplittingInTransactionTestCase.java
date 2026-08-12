@@ -30,6 +30,7 @@ import java.util.Arrays;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TransactionTestCase(dbTypes = TransactionTestConstants.MYSQL, scenario = "readwrite_splitting", adapters = TransactionTestConstants.PROXY)
@@ -102,11 +103,12 @@ public final class ReadwriteSplittingInTransactionTestCase extends BaseTransacti
     private String preview(final Connection connection, final String sql) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             statement.execute(String.format("PREVIEW %s;", sql));
-            ResultSet resultSet = statement.getResultSet();
-            if (resultSet.next()) {
-                return resultSet.getString("data_source_name");
+            try (ResultSet resultSet = statement.getResultSet()) {
+                assertTrue(resultSet.next());
+                String result = resultSet.getString("data_source_name");
+                assertFalse(resultSet.next());
+                return result;
             }
-            return "";
         }
     }
     
@@ -115,6 +117,7 @@ public final class ReadwriteSplittingInTransactionTestCase extends BaseTransacti
             assertTrue(resultSet.next());
             int actualRowCount = resultSet.getInt(1);
             assertThat(String.format("Recode num assert error, expect: %s, actual: %s.", rowNum, actualRowCount), actualRowCount, is(rowNum));
+            assertFalse(resultSet.next());
         }
     }
     
