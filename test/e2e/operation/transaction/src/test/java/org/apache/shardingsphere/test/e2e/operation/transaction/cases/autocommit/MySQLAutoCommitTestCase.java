@@ -28,6 +28,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 /**
  * MySQL auto commit transaction integration test.
  */
@@ -51,18 +55,17 @@ public final class MySQLAutoCommitTestCase extends AutoCommitTestCase {
     }
     
     private void assertExceptionForceCommit() throws SQLException {
-        Connection connection = getDataSource().getConnection();
-        try {
+        try (Connection connection = getDataSource().getConnection()) {
             executeWithLog(connection, "DELETE FROM account");
             connection.setAutoCommit(false);
             executeWithLog(connection, "INSERT INTO account VALUES (1, 1, 1), (2, 2, 2)");
-            int causeExceptionResult = 1 / 0;
-            log.info("Caused exception result: {}", causeExceptionResult);
-            executeWithLog(connection, "INSERT INTO account VALUES (3, 3, 3), (4, 4, 4)");
-        } catch (final ArithmeticException ignored) {
-        } finally {
+            ArithmeticException ex = assertThrows(ArithmeticException.class, () -> {
+                int causeExceptionResult = 1 / 0;
+                log.info("Caused exception result: {}", causeExceptionResult);
+                executeWithLog(connection, "INSERT INTO account VALUES (3, 3, 3), (4, 4, 4)");
+            });
+            assertThat(ex.getMessage(), is("/ by zero"));
             connection.commit();
-            connection.close();
         }
         try (Connection queryConnection = getDataSource().getConnection()) {
             assertAccountBalances(queryConnection, 1, 2);
