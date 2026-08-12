@@ -25,13 +25,16 @@ import org.apache.shardingsphere.transaction.api.TransactionType;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * MySQL truncate local transaction integration test.
  */
 @TransactionTestCase(dbTypes = TransactionTestConstants.MYSQL, transactionTypes = TransactionType.LOCAL)
 public final class MySQLLocalTruncateTestCase extends BaseTransactionTestCase {
-    
+
     public MySQLLocalTruncateTestCase(final TransactionTestCaseParameter testCaseParam) {
         super(testCaseParam);
     }
@@ -47,7 +50,7 @@ public final class MySQLLocalTruncateTestCase extends BaseTransactionTestCase {
         try (Connection connection = getDataSource().getConnection()) {
             connection.setAutoCommit(false);
             assertAccountRowCount(connection, 8);
-            executeWithLog(connection, "TRUNCATE account");
+            executeTruncate(connection);
             assertAccountRowCount(connection, 0);
             connection.rollback();
             // Expected truncate operation cannot be rolled back in MySQL local transaction
@@ -62,7 +65,7 @@ public final class MySQLLocalTruncateTestCase extends BaseTransactionTestCase {
         try (Connection connection = getDataSource().getConnection()) {
             connection.setAutoCommit(false);
             assertAccountRowCount(connection, 8);
-            executeWithLog(connection, "TRUNCATE account");
+            executeTruncate(connection);
             assertAccountRowCount(connection, 0);
             connection.commit();
             try (Connection queryConnection = getDataSource().getConnection()) {
@@ -75,6 +78,12 @@ public final class MySQLLocalTruncateTestCase extends BaseTransactionTestCase {
         try (Connection connection = getDataSource().getConnection()) {
             executeWithLog(connection, "DELETE FROM account");
             executeWithLog(connection, "INSERT INTO account(id, balance, transaction_id) VALUES (1, 1, 1),(2, 2, 2),(3, 3, 3),(4, 4, 4),(5, 5, 5),(6, 6, 6),(7, 7, 7),(8, 8, 8)");
+        }
+    }
+
+    private void executeTruncate(final Connection connection) throws SQLException {
+        try (Statement statement = connection.createStatement()) {
+            assertFalse(statement.execute("TRUNCATE account"));
         }
     }
 }
