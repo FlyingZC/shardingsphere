@@ -24,6 +24,8 @@ import org.apache.shardingsphere.test.e2e.operation.transaction.engine.constants
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -52,7 +54,8 @@ public final class PostgreSQLTCLStatementTestCase extends BaseTCLStatementTransa
         executeWithLog(connection, "BEGIN");
         executeWithLog(connection, "INSERT INTO account (id, balance, transaction_id) VALUES (3, 3, 3), (4, 4, 4)");
         assertAccountBalances(queryConnection, 1, 2);
-        assertThrows(SQLException.class, () -> executeWithLog(connection, "BEGIN"));
+        SQLException actualException = assertThrows(SQLException.class, () -> executeWithLog(connection, "BEGIN"));
+        assertThat(actualException.getSQLState(), is("25000"));
         executeWithLog(connection, "ROLLBACK");
         assertAccountBalances(queryConnection, 1, 2);
     }
