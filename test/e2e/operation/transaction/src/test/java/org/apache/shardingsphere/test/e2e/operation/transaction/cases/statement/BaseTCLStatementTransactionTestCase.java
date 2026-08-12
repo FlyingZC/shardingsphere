@@ -46,4 +46,14 @@ public abstract class BaseTCLStatementTransactionTestCase extends BaseTransactio
         executeWithLog(connection, "COMMIT");
         assertAccountBalances(queryConnection, 1, 2);
     }
+    
+    protected void assertBeginTransaction(final Connection connection, final Connection queryConnection) throws SQLException {
+        executeWithLog(connection, "DELETE FROM account");
+        assertAccountRowCount(queryConnection, 0);
+        executeWithLog(connection, "BEGIN TRANSACTION");
+        executeWithLog(connection, "INSERT INTO account (id, balance, transaction_id) VALUES (1, 1, 1), (2, 2, 2)");
+        assertAccountBalances(queryConnection);
+        executeWithLog(connection, "END TRANSACTION");
+        assertAccountBalances(queryConnection, 1, 2);
+    }
 }
