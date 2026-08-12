@@ -36,9 +36,10 @@ public final class AutoReadOnlyTransactionTestCase extends BaseTransactionTestCa
     
     @Override
     public void executeTest(final TransactionContainerComposer containerComposer) throws SQLException {
-        try (Connection connection = getDataSource().getConnection()) {
+        try (
+                Connection connection = getDataSource().getConnection();
+                Connection queryConnection = getDataSource().getConnection()) {
             connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
-            Connection queryConnection = getDataSource().getConnection();
             queryConnection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
             assertAccountRowCount(connection, 0);
             connection.setAutoCommit(true);
@@ -61,9 +62,9 @@ public final class AutoReadOnlyTransactionTestCase extends BaseTransactionTestCa
             assertAccountBalances(connection, 1, 2, 3);
             executeWithLog(connection, "INSERT INTO account VALUES (4, 4, 4)");
             assertAccountBalances(connection, 1, 2, 3, 4);
+            assertAccountBalances(queryConnection, 1, 2, 3);
             connection.commit();
             assertAccountBalances(queryConnection, 1, 2, 3, 4);
-            queryConnection.close();
         }
     }
 }
