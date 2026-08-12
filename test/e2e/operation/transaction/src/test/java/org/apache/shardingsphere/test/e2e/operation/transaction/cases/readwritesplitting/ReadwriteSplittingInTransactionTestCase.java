@@ -111,14 +111,11 @@ public final class ReadwriteSplittingInTransactionTestCase extends BaseTransacti
     }
     
     private void assertWriteDataSourceTableRowCount(final Connection connection, final int rowNum) throws SQLException {
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery("SELECT COUNT(*) FROM account FOR UPDATE");
-        int resultSetCount = 0;
-        while (resultSet.next()) {
-            resultSetCount++;
+        try (Statement statement = connection.createStatement(); ResultSet resultSet = statement.executeQuery("SELECT COUNT(*) FROM account FOR UPDATE")) {
+            assertTrue(resultSet.next());
+            int actualRowCount = resultSet.getInt(1);
+            assertThat(String.format("Recode num assert error, expect: %s, actual: %s.", rowNum, actualRowCount), actualRowCount, is(rowNum));
         }
-        statement.close();
-        assertThat(String.format("Recode num assert error, expect: %s, actual: %s.", rowNum, resultSetCount), resultSetCount, is(rowNum));
     }
     
     private void assertRouteToReadDataSource(final String routedDataSource) {
