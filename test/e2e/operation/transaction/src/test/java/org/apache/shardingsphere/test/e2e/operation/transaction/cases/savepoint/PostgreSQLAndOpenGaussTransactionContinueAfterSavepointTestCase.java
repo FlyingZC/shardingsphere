@@ -32,12 +32,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * PostgreSQL transaction continuation after savepoint rollback integration test.
+ * PostgreSQL and openGauss transaction continuation after savepoint rollback integration test.
  */
-@TransactionTestCase(dbTypes = TransactionTestConstants.POSTGRESQL, adapters = TransactionTestConstants.JDBC, transactionTypes = TransactionType.LOCAL)
-public final class PostgreSQLTransactionContinueAfterSavepointTestCase extends BaseTransactionTestCase {
+@TransactionTestCase(dbTypes = {TransactionTestConstants.POSTGRESQL, TransactionTestConstants.OPENGAUSS}, adapters = TransactionTestConstants.JDBC,
+        transactionTypes = TransactionType.LOCAL)
+public final class PostgreSQLAndOpenGaussTransactionContinueAfterSavepointTestCase extends BaseTransactionTestCase {
     
-    public PostgreSQLTransactionContinueAfterSavepointTestCase(final TransactionTestCaseParameter testCaseParam) {
+    public PostgreSQLAndOpenGaussTransactionContinueAfterSavepointTestCase(final TransactionTestCaseParameter testCaseParam) {
         super(testCaseParam);
     }
     
