@@ -26,6 +26,7 @@ import org.apache.shardingsphere.test.e2e.operation.transaction.engine.constants
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -54,9 +55,13 @@ public class TransactionRollbackOnlyTestCase extends BaseTransactionTestCase {
             assertExceptionOccur(connection, false);
             executeUpdateWithLog(connection, "UPDATE account SET balance = 100 WHERE id = 1");
             String duplicatedKeySQL = "INSERT INTO account (id, balance, transaction_id) values (1, 11, 11)";
-            assertThrows(SQLException.class, () -> executeUpdateWithLog(connection, duplicatedKeySQL));
+            SQLException duplicatedKeyException = assertThrows(SQLException.class, () -> executeUpdateWithLog(connection, duplicatedKeySQL));
+            assertThat(duplicatedKeyException.getSQLState(), is("23505"));
             assertExceptionOccur(connection, true);
-            assertThrows(SQLException.class, () -> executeUpdateWithLog(connection, "INSERT INTO account (id, balance, transaction_id) values (2, 2, 2)"));
+            SQLException abortedTransactionException = assertThrows(SQLException.class,
+                    () -> executeUpdateWithLog(connection, "INSERT INTO account (id, balance, transaction_id) values (2, 2, 2)"));
+            assertThat(abortedTransactionException.getClass(), is(SQLFeatureNotSupportedException.class));
+            assertThat(abortedTransactionException.getMessage(), is("Current transaction is aborted, commands ignored until end of transaction block."));
             connection.commit();
         }
         try (Connection connection = getDataSource().getConnection()) {
@@ -72,9 +77,12 @@ public class TransactionRollbackOnlyTestCase extends BaseTransactionTestCase {
             executeUpdateWithLog(connection, "UPDATE account SET balance = 100 WHERE id = 1");
             try (PreparedStatement duplicatedKeyInsertStatement = connection.prepareStatement("INSERT INTO account (id, balance, transaction_id) values (?, 11, 11)")) {
                 duplicatedKeyInsertStatement.setInt(1, 1);
-                assertThrows(SQLException.class, duplicatedKeyInsertStatement::execute);
+                SQLException duplicatedKeyException = assertThrows(SQLException.class, duplicatedKeyInsertStatement::execute);
+                assertThat(duplicatedKeyException.getSQLState(), is("23505"));
                 duplicatedKeyInsertStatement.setInt(1, 2);
-                assertThrows(SQLException.class, duplicatedKeyInsertStatement::execute);
+                SQLException abortedTransactionException = assertThrows(SQLException.class, duplicatedKeyInsertStatement::execute);
+                assertThat(abortedTransactionException.getClass(), is(SQLFeatureNotSupportedException.class));
+                assertThat(abortedTransactionException.getMessage(), is("Current transaction is aborted, commands ignored until end of transaction block."));
             }
             assertExceptionOccur(connection, true);
             connection.commit();
