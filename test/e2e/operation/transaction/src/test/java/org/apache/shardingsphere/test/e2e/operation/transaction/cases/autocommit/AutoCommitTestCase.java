@@ -23,6 +23,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -36,8 +38,9 @@ public abstract class AutoCommitTestCase extends BaseTransactionTestCase {
     }
     
     protected void assertAutoCommitWithStatement() throws SQLException {
-        try (Connection connection = getDataSource().getConnection()) {
-            Connection queryConnection = getDataSource().getConnection();
+        try (
+                Connection connection = getDataSource().getConnection();
+                Connection queryConnection = getDataSource().getConnection()) {
             queryConnection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
             connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
             connection.setAutoCommit(false);
@@ -78,54 +81,54 @@ public abstract class AutoCommitTestCase extends BaseTransactionTestCase {
             assertAccountBalances(queryConnection, 1, 2, 4, 5, 6);
             connection.setAutoCommit(true);
             assertAccountBalances(queryConnection, 1, 2, 4, 5, 6, 7, 8, 9, 10);
-            queryConnection.close();
         }
     }
     
     protected void assertAutoCommitWithPreparedStatement() throws SQLException {
-        try (Connection connection = getDataSource().getConnection()) {
-            Connection queryConnection = getDataSource().getConnection();
+        try (
+                Connection connection = getDataSource().getConnection();
+                Connection queryConnection = getDataSource().getConnection()) {
             queryConnection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
             connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
             connection.setAutoCommit(false);
             executeWithLog(connection, "DELETE FROM account");
             assertFalse(connection.getAutoCommit());
-            PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO account VALUES(?, ?, ?)");
-            executePreparedStatement(preparedStatement, 1);
-            connection.commit();
-            assertFalse(connection.getAutoCommit());
-            assertAccountBalances(queryConnection, 1);
-            executeUpdatePreparedStatement(preparedStatement, 2);
-            assertAccountBalances(queryConnection, 1);
-            connection.commit();
-            assertAccountBalances(queryConnection, 1, 2);
-            assertFalse(connection.getAutoCommit());
-            executePreparedStatement(preparedStatement, 3);
-            assertAccountBalances(queryConnection, 1, 2);
-            connection.rollback();
-            assertFalse(connection.getAutoCommit());
-            assertAccountBalances(queryConnection, 1, 2);
-            executeUpdatePreparedStatement(preparedStatement, 4);
-            assertAccountBalances(queryConnection, 1, 2);
-            connection.setAutoCommit(true);
-            assertTrue(connection.getAutoCommit());
-            assertAccountBalances(queryConnection, 1, 2, 4);
-            executePreparedStatement(preparedStatement, 5);
-            assertAccountBalances(queryConnection, 1, 2, 4, 5);
-            executePreparedStatement(preparedStatement, 6);
-            connection.setAutoCommit(false);
-            executePreparedStatement(preparedStatement, 7);
-            assertAccountBalances(queryConnection, 1, 2, 4, 5, 6);
-            executePreparedStatement(preparedStatement, 8);
-            assertAccountBalances(queryConnection, 1, 2, 4, 5, 6);
-            connection.setAutoCommit(false);
-            assertAccountBalances(queryConnection, 1, 2, 4, 5, 6);
-            executePreparedStatement(preparedStatement, 9);
-            executePreparedStatement(preparedStatement, 10);
-            assertAccountBalances(queryConnection, 1, 2, 4, 5, 6);
-            connection.setAutoCommit(true);
-            assertAccountBalances(queryConnection, 1, 2, 4, 5, 6, 7, 8, 9, 10);
-            queryConnection.close();
+            try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO account VALUES(?, ?, ?)")) {
+                executePreparedStatement(preparedStatement, 1);
+                connection.commit();
+                assertFalse(connection.getAutoCommit());
+                assertAccountBalances(queryConnection, 1);
+                executeUpdatePreparedStatement(preparedStatement, 2);
+                assertAccountBalances(queryConnection, 1);
+                connection.commit();
+                assertAccountBalances(queryConnection, 1, 2);
+                assertFalse(connection.getAutoCommit());
+                executePreparedStatement(preparedStatement, 3);
+                assertAccountBalances(queryConnection, 1, 2);
+                connection.rollback();
+                assertFalse(connection.getAutoCommit());
+                assertAccountBalances(queryConnection, 1, 2);
+                executeUpdatePreparedStatement(preparedStatement, 4);
+                assertAccountBalances(queryConnection, 1, 2);
+                connection.setAutoCommit(true);
+                assertTrue(connection.getAutoCommit());
+                assertAccountBalances(queryConnection, 1, 2, 4);
+                executePreparedStatement(preparedStatement, 5);
+                assertAccountBalances(queryConnection, 1, 2, 4, 5);
+                executePreparedStatement(preparedStatement, 6);
+                connection.setAutoCommit(false);
+                executePreparedStatement(preparedStatement, 7);
+                assertAccountBalances(queryConnection, 1, 2, 4, 5, 6);
+                executePreparedStatement(preparedStatement, 8);
+                assertAccountBalances(queryConnection, 1, 2, 4, 5, 6);
+                connection.setAutoCommit(false);
+                assertAccountBalances(queryConnection, 1, 2, 4, 5, 6);
+                executePreparedStatement(preparedStatement, 9);
+                executePreparedStatement(preparedStatement, 10);
+                assertAccountBalances(queryConnection, 1, 2, 4, 5, 6);
+                connection.setAutoCommit(true);
+                assertAccountBalances(queryConnection, 1, 2, 4, 5, 6, 7, 8, 9, 10);
+            }
         }
     }
     
@@ -142,12 +145,12 @@ public abstract class AutoCommitTestCase extends BaseTransactionTestCase {
     
     private void executeUpdatePreparedStatement(final PreparedStatement preparedStatement, final int value) throws SQLException {
         setPreparedStatementParameters(preparedStatement, value);
-        preparedStatement.executeUpdate();
+        assertThat(preparedStatement.executeUpdate(), is(1));
     }
     
     private void executePreparedStatement(final PreparedStatement prepareStatement, final int value) throws SQLException {
         setPreparedStatementParameters(prepareStatement, value);
-        prepareStatement.execute();
+        assertThat(prepareStatement.executeUpdate(), is(1));
     }
     
     private void setPreparedStatementParameters(final PreparedStatement prepareStatement, final int value) throws SQLException {
