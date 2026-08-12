@@ -26,6 +26,9 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.stream.IntStream;
 
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 /**
  * Multiple transactions within a connection integration test.
  */
@@ -40,14 +43,14 @@ public final class MultiTransactionInConnectionTestCase extends BaseTransactionT
     public void executeTest(final TransactionContainerComposer containerComposer) throws SQLException {
         try (
                 Connection connection = getDataSource().getConnection();
-                Connection queryConnection = getDataSource().getConnection()) {
-            PreparedStatement statement = connection.prepareStatement("INSERT INTO account(id, balance, transaction_id) VALUES(?, ?, ?)");
+                Connection queryConnection = getDataSource().getConnection();
+                PreparedStatement statement = connection.prepareStatement("INSERT INTO account(id, balance, transaction_id) VALUES(?, ?, ?)")) {
             for (int i = 0; i < 8; i++) {
                 connection.setAutoCommit(false);
                 statement.setLong(1, i);
                 statement.setFloat(2, i);
                 statement.setInt(3, i);
-                statement.execute();
+                assertThat(statement.executeUpdate(), is(1));
                 connection.commit();
                 assertAccountBalances(queryConnection, IntStream.rangeClosed(0, i).toArray());
             }
