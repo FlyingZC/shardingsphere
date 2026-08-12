@@ -24,6 +24,7 @@ import org.apache.shardingsphere.test.e2e.operation.transaction.engine.base.Tran
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.stream.IntStream;
 
 /**
  * Multiple transactions within a connection integration test.
@@ -48,7 +49,7 @@ public final class MultiTransactionInConnectionTestCase extends BaseTransactionT
                 statement.setInt(3, i);
                 statement.execute();
                 connection.commit();
-                assertAccountRowCount(queryConnection, i + 1);
+                assertAccountBalances(queryConnection, IntStream.rangeClosed(0, i).toArray());
             }
         }
     }
