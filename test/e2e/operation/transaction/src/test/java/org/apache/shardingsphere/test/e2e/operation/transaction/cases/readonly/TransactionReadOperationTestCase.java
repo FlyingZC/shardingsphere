@@ -26,6 +26,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Savepoint;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -52,42 +54,42 @@ public final class TransactionReadOperationTestCase extends BaseTransactionTestC
     }
     
     private void assertStandardReadInTransactionTestCase() throws SQLException {
-        Connection queryConnection = getDataSource().getConnection();
-        try (Connection connection = getDataSource().getConnection()) {
-            connection.setAutoCommit(false);
-            assertAccountBalances(connection);
-            assertAccountBalances(connection);
-            connection.rollback();
-            connection.setAutoCommit(true);
+        try (Connection queryConnection = getDataSource().getConnection()) {
+            try (Connection connection = getDataSource().getConnection()) {
+                connection.setAutoCommit(false);
+                assertAccountBalances(connection);
+                assertAccountBalances(connection);
+                connection.rollback();
+                connection.setAutoCommit(true);
+            }
+            try (Connection connection = getDataSource().getConnection()) {
+                connection.setAutoCommit(false);
+                assertAccountBalances(connection);
+                assertAccountBalances(connection);
+                connection.commit();
+                connection.setAutoCommit(true);
+            }
+            assertAccountRowCount(queryConnection, 0);
+            try (Connection connection = getDataSource().getConnection()) {
+                connection.setAutoCommit(false);
+                assertAccountBalances(connection);
+                executeWithLog(connection, "INSERT INTO account VALUES (1, 1, 1)");
+                assertAccountBalances(connection, 1);
+                connection.rollback();
+                connection.setAutoCommit(true);
+            }
+            assertAccountRowCount(queryConnection, 0);
+            try (Connection connection = getDataSource().getConnection()) {
+                connection.setAutoCommit(false);
+                assertAccountBalances(connection);
+                executeWithLog(connection, "INSERT INTO account VALUES (1, 1, 1)");
+                assertAccountBalances(connection, 1);
+                connection.commit();
+                connection.setAutoCommit(true);
+            }
+            assertAccountBalances(queryConnection, 1);
+            assertThat(executeUpdateWithLog(queryConnection, "DELETE FROM account"), is(1));
         }
-        try (Connection connection = getDataSource().getConnection()) {
-            connection.setAutoCommit(false);
-            assertAccountBalances(connection);
-            assertAccountBalances(connection);
-            connection.commit();
-            connection.setAutoCommit(true);
-        }
-        assertAccountRowCount(queryConnection, 0);
-        try (Connection connection = getDataSource().getConnection()) {
-            connection.setAutoCommit(false);
-            assertAccountBalances(connection);
-            executeWithLog(connection, "INSERT INTO account VALUES (1, 1, 1)");
-            assertAccountBalances(connection, 1);
-            connection.rollback();
-            connection.setAutoCommit(true);
-        }
-        assertAccountRowCount(queryConnection, 0);
-        try (Connection connection = getDataSource().getConnection()) {
-            connection.setAutoCommit(false);
-            assertAccountBalances(connection);
-            executeWithLog(connection, "INSERT INTO account VALUES (1, 1, 1)");
-            assertAccountBalances(connection, 1);
-            connection.commit();
-            connection.setAutoCommit(true);
-        }
-        assertAccountBalances(queryConnection, 1);
-        executeWithLog(queryConnection, "DELETE FROM account");
-        queryConnection.close();
     }
     
     private void assertEmptyBeginAndCommit(final Connection connection) throws SQLException {
