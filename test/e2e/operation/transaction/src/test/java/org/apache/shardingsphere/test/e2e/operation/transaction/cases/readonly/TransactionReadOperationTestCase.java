@@ -50,33 +50,33 @@ public final class TransactionReadOperationTestCase extends BaseTransactionTestC
         Connection queryConnection = getDataSource().getConnection();
         try (Connection connection = getDataSource().getConnection()) {
             connection.setAutoCommit(false);
-            executeQueryWithLog(connection, "SELECT * FROM account");
-            executeQueryWithLog(connection, "SELECT * FROM account");
+            assertAccountBalances(connection);
+            assertAccountBalances(connection);
             connection.rollback();
             connection.setAutoCommit(true);
         }
         try (Connection connection = getDataSource().getConnection()) {
             connection.setAutoCommit(false);
-            executeQueryWithLog(connection, "SELECT * FROM account");
-            executeQueryWithLog(connection, "SELECT * FROM account");
+            assertAccountBalances(connection);
+            assertAccountBalances(connection);
             connection.commit();
             connection.setAutoCommit(true);
         }
         assertAccountRowCount(queryConnection, 0);
         try (Connection connection = getDataSource().getConnection()) {
             connection.setAutoCommit(false);
-            executeQueryWithLog(connection, "SELECT * FROM account");
+            assertAccountBalances(connection);
             executeWithLog(connection, "INSERT INTO account VALUES (1, 1, 1)");
-            executeQueryWithLog(connection, "SELECT * FROM account");
+            assertAccountBalances(connection, 1);
             connection.rollback();
             connection.setAutoCommit(true);
         }
         assertAccountRowCount(queryConnection, 0);
         try (Connection connection = getDataSource().getConnection()) {
             connection.setAutoCommit(false);
-            executeQueryWithLog(connection, "SELECT * FROM account");
+            assertAccountBalances(connection);
             executeWithLog(connection, "INSERT INTO account VALUES (1, 1, 1)");
-            executeQueryWithLog(connection, "SELECT * FROM account");
+            assertAccountBalances(connection, 1);
             connection.commit();
             connection.setAutoCommit(true);
         }
@@ -95,15 +95,15 @@ public final class TransactionReadOperationTestCase extends BaseTransactionTestC
     private void assertReadQueryTransaction(final Connection connection, final Connection queryConnection) throws SQLException {
         connection.setAutoCommit(false);
         assertAccountRowCount(queryConnection, 0);
-        executeQueryWithLog(connection, "SELECT * FROM account");
+        assertAccountBalances(connection);
         connection.commit();
         connection.setAutoCommit(false);
-        executeQueryWithLog(connection, "SELECT * FROM account");
+        assertAccountBalances(connection);
         connection.rollback();
         assertAccountRowCount(queryConnection, 0);
         connection.setAutoCommit(false);
-        executeQueryWithLog(connection, "SELECT * FROM account");
-        executeQueryWithLog(connection, "SELECT * FROM account");
+        assertAccountBalances(connection);
+        assertAccountBalances(connection);
         connection.commit();
         assertAccountRowCount(queryConnection, 0);
         connection.setAutoCommit(false);
@@ -113,27 +113,29 @@ public final class TransactionReadOperationTestCase extends BaseTransactionTestC
     
     private void assertReadWriteTransaction(final Connection connection, final Connection queryConnection) throws SQLException {
         connection.setAutoCommit(false);
-        executeQueryWithLog(connection, "SELECT * FROM account");
+        assertAccountBalances(connection);
         executeWithLog(connection, "INSERT INTO account VALUES (1, 1, 1)");
         assertAccountRowCount(queryConnection, 0);
-        executeQueryWithLog(connection, "SELECT * FROM account");
+        assertAccountBalances(connection, 1);
         connection.commit();
         assertAccountBalances(queryConnection, 1);
         connection.setAutoCommit(false);
-        executeQueryWithLog(connection, "SELECT * FROM account");
+        assertAccountBalances(connection, 1);
         executeWithLog(connection, "INSERT INTO account VALUES (2, 2, 2)");
+        assertAccountBalances(connection, 1, 2);
         assertAccountBalances(queryConnection, 1);
         connection.rollback();
         assertAccountBalances(queryConnection, 1);
         connection.setAutoCommit(false);
-        executeQueryWithLog(connection, "SELECT * FROM account");
+        assertAccountBalances(connection, 1);
         connection.setAutoCommit(true);
         connection.setAutoCommit(false);
-        executeQueryWithLog(connection, "SELECT * FROM account");
+        assertAccountBalances(connection, 1);
         Savepoint savepoint = connection.setSavepoint("savepoint1");
         executeWithLog(connection, "INSERT INTO account VALUES (3, 3, 3)");
-        executeQueryWithLog(connection, "SELECT * FROM account");
+        assertAccountBalances(connection, 1, 3);
         connection.rollback(savepoint);
+        assertAccountBalances(connection, 1);
         connection.commit();
         assertAccountBalances(queryConnection, 1);
         connection.setAutoCommit(false);
