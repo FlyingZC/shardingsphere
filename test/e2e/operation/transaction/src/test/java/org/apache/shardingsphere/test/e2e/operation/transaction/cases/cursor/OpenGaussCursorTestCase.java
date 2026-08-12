@@ -66,6 +66,7 @@ public final class OpenGaussCursorTestCase extends BaseTransactionTestCase {
             singleTableCursorOrderByTest(connection);
             broadcastTableCursorTest(connection);
             broadcastTableCursorTest2(connection);
+            broadcastAndShardingTablesCursorTest(connection);
             broadcastAndSingleTablesCursorTest(connection);
             broadcastAndSingleTablesCursorTest2(connection);
             viewCursorTest(connection);
@@ -140,6 +141,21 @@ public final class OpenGaussCursorTestCase extends BaseTransactionTestCase {
         executeWithLog(connection, "rollback;");
     }
     
+    private void broadcastAndShardingTablesCursorTest(final Connection connection) throws SQLException {
+        String cursorName = cursorSQLCommand.getBroadcastAndShardingTablesCursor().getCursorName();
+        String sql = cursorSQLCommand.getBroadcastAndShardingTablesCursor().getSql();
+        executeWithLog(connection, "start transaction;");
+        executeWithLog(connection, sql);
+        executeWithLog(connection, String.format("close %s;", cursorName));
+        executeWithLog(connection, sql);
+        fetch(connection, 1, cursorName);
+        fetch(connection, 2, cursorName);
+        fetch(connection, 3, cursorName);
+        fetch(connection, 4, cursorName);
+        fetchOverTest(connection, cursorName);
+        executeWithLog(connection, "rollback;");
+    }
+    
     private void broadcastAndSingleTablesCursorTest(final Connection connection) throws SQLException {
         String cursorName = cursorSQLCommand.getBroadcastAndSingleTablesCursor().getCursorName();
         String sql = cursorSQLCommand.getBroadcastAndSingleTablesCursor().getSql();
@@ -156,8 +172,8 @@ public final class OpenGaussCursorTestCase extends BaseTransactionTestCase {
     }
     
     private void broadcastAndSingleTablesCursorTest2(final Connection connection) throws SQLException {
-        String cursorName = cursorSQLCommand.getBroadcastTablesCursor2().getCursorName();
-        String sql = cursorSQLCommand.getBroadcastTablesCursor2().getSql();
+        String cursorName = cursorSQLCommand.getBroadcastAndSingleTablesCursor2().getCursorName();
+        String sql = cursorSQLCommand.getBroadcastAndSingleTablesCursor2().getSql();
         executeWithLog(connection, "start transaction;");
         executeWithLog(connection, sql);
         executeWithLog(connection, String.format("close %s;", cursorName));
