@@ -33,6 +33,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Classic transfer transaction integration test.
@@ -81,15 +83,15 @@ public final class ClassicTransferTestCase extends BaseTransactionTestCase {
     }
     
     private int getBalanceSum() throws SQLException {
-        int result = 0;
+        int result;
         try (
                 Connection connection = getDataSource().getConnection();
                 Statement statement = connection.createStatement()) {
             connection.setAutoCommit(false);
             try (ResultSet resultSet = statement.executeQuery("SELECT SUM(balance) AS a FROM account WHERE transaction_id IN (1, 2)")) {
-                if (resultSet.next()) {
-                    result = resultSet.getInt(1);
-                }
+                assertTrue(resultSet.next());
+                result = resultSet.getInt(1);
+                assertFalse(resultSet.next());
             }
             connection.commit();
         }
