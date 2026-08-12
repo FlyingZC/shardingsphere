@@ -25,7 +25,10 @@ import org.postgresql.jdbc.PSQLSavepoint;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Savepoint;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -42,7 +45,20 @@ public final class PostgreSQLSavePointTestCase extends BaseSavePointTestCase {
     public void executeTest(final TransactionContainerComposer containerComposer) throws SQLException {
         assertRollbackToSavepoint();
         assertReleaseSavepoint();
+        assertReleasedSavepoint();
         assertSavepointNotInTransaction();
+    }
+    
+    private void assertReleasedSavepoint() throws SQLException {
+        try (Connection connection = getDataSource().getConnection()) {
+            connection.setAutoCommit(false);
+            assertAccountBalances(connection, 1, 2, 3, 4, 5);
+            Savepoint savepoint = connection.setSavepoint("released_point");
+            connection.releaseSavepoint(savepoint);
+            SQLException actualException = assertThrows(SQLException.class, () -> connection.rollback(savepoint));
+            assertThat(actualException.getSQLState(), is("3B000"));
+            connection.rollback();
+        }
     }
     
     @SneakyThrows(SQLException.class)
