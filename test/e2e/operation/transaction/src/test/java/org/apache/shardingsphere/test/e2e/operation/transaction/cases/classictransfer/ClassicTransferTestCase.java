@@ -109,8 +109,8 @@ public final class ClassicTransferTestCase extends BaseTransactionTestCase {
             try (Connection connection = dataSource.getConnection()) {
                 connection.setAutoCommit(false);
                 try (Statement statement = connection.createStatement()) {
-                    statement.execute("UPDATE account SET balance = balance - 1 WHERE transaction_id = 2;");
-                    statement.execute("UPDATE account SET balance = balance + 1 WHERE transaction_id = 1;");
+                    assertThat(statement.executeUpdate("UPDATE account SET balance = balance - 1 WHERE transaction_id = 2;"), is(1));
+                    assertThat(statement.executeUpdate("UPDATE account SET balance = balance + 1 WHERE transaction_id = 1;"), is(1));
                     connection.commit();
                 } catch (final SQLException ex) {
                     connection.rollback();
