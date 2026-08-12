@@ -22,8 +22,13 @@ import org.apache.shardingsphere.test.e2e.operation.transaction.engine.base.Tran
 import org.apache.shardingsphere.test.e2e.operation.transaction.engine.base.TransactionTestCase;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Savepoint;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TransactionTestCase
 public final class TransactionReadOperationTestCase extends BaseTransactionTestCase {
@@ -107,7 +112,9 @@ public final class TransactionReadOperationTestCase extends BaseTransactionTestC
         connection.commit();
         assertAccountRowCount(queryConnection, 0);
         connection.setAutoCommit(false);
-        executeQueryWithLog(connection, "SELECT * FROM account FOR UPDATE");
+        try (ResultSet resultSet = executeQueryWithLog(connection, "SELECT * FROM account FOR UPDATE")) {
+            assertFalse(resultSet.next());
+        }
         connection.commit();
     }
     
@@ -139,7 +146,11 @@ public final class TransactionReadOperationTestCase extends BaseTransactionTestC
         connection.commit();
         assertAccountBalances(queryConnection, 1);
         connection.setAutoCommit(false);
-        executeQueryWithLog(connection, "SELECT now()");
+        try (ResultSet resultSet = executeQueryWithLog(connection, "SELECT now()")) {
+            assertTrue(resultSet.next());
+            assertNotNull(resultSet.getObject(1));
+            assertFalse(resultSet.next());
+        }
         connection.commit();
     }
 }
